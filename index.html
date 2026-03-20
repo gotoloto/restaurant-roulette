@@ -404,14 +404,14 @@
     .ditty-overlay.visible { opacity: 1; }
     .ditty-overlay.fading { opacity: 0; transition: opacity 1s ease; }
     .ditty-knight {
-      font-family: 'VT323', monospace;
-      color: var(--gold);
-      white-space: pre;
-      font-size: 12px;
-      line-height: 1.15;
       flex-shrink: 0;
       align-self: center;
-      text-shadow: 0 0 12px rgba(212,170,0,0.4);
+      width: 200px;
+      height: auto;
+      filter: drop-shadow(0 0 12px rgba(212,170,0,0.4));
+    }
+    .ditty-knight.mirrored {
+      transform: scaleX(-1);
     }
     .ditty-text {
       font-family: 'UnifrakturMaguntia', cursive;
@@ -442,64 +442,14 @@
 <canvas id="confetti-canvas"></canvas>
 
 <div class="ditty-overlay" id="dittyOverlay">
-  <pre class="ditty-knight">
-               .---.
-               |===|
-               |===|
-          .--.:===:.--.
-         /( '"-.-"'  ) \
-        |#| "=-.  \'-=#|
-        |#\  /.-=| |\==|
-        ||~  :---_| | #|
-        |/  '=-   \ \ #|
-        /'/ -==.   \/ ##
-        |" ===++="   |##
-     o    /|       | ##
-    ..\-:#| __|  ___|/
-   ....'\  |:--:""  #=\
-  .....'" * #-#|##-=#0#/
-   ..'" '   #=-|#-###|
-    .."'    |##|)=###
-     "'     |=#|=-##|
-            |#=|=###|
-            |#=|-=##|
-            | [   [ |
-            | [   [ |
-            [=-.  [-=-]
-             ["_.    _]
-</pre>
+  <img class="ditty-knight" src="https://art.ngfiles.com/images/2967000/2967632_164759_moopseal_ascii-knight.5cdc1c42f6adeb58ae58586f421d19c6.webp?f1699098085" alt="Knight">
   <div class="ditty-text">Spin, spin, wheel of fare,
 One hundred lunches in the air!
 Burgers, bowls, or sushi roll--
 Feed the body, fuel the soul!
 Round and round, no time to stall--
 Fortune picks our feast for all!</div>
-  <pre class="ditty-knight">
-            .---.
-            |===|
-            |===|
-       .--.:|===:.--.
-      / (  '"-.-"' )\
-      |#=-'\  .-=" |#|
-      |==/| |=-.\  /#|
-      |# | |_---:  ~||
-      |# / /   -='  \|
-      ## \/   .==-  \'\
-      ##|   "=++===  "|
-      ## |       |\    o
-       \|___  |__ |#:-/..
-      /=#  "":--:| /'....
-      \#0#=-##|#-# * '"....
-       |###-#|=-#   ' '"..
-        ###=(|##|    '".
-        |##=-|#=|     '"
-        |###=|=#|
-        |##=-|=#|
-        | ]   ] |
-        | ]   ] |
-       [-=-]  .-=]
-       [_    ._"]
-</pre>
+  <img class="ditty-knight mirrored" src="https://art.ngfiles.com/images/2967000/2967632_164759_moopseal_ascii-knight.5cdc1c42f6adeb58ae58586f421d19c6.webp?f1699098085" alt="Knight">
 </div>
 
 <div class="tab-bar">
@@ -964,6 +914,10 @@ window.addEventListener("resize", () => {
   c.height = window.innerHeight;
 });
 </script>
+
+<div style="text-align:center; padding:20px 10px 12px; color:#444; font-family:'VT323',monospace; font-size:14px;">
+  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a>
+</div>
 
 </body>
 </html>
