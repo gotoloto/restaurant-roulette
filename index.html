@@ -494,7 +494,7 @@ Fortune picks our feast for all!</div>
     <div class="visit-info" id="visitInfo"></div>
     <div class="visit-dates" id="visitDates"></div>
     <div class="modal-actions">
-      <button class="btn-confirm" onclick="confirmSelection()">> ACCEPT FATE</button>
+      <button class="btn-confirm" onclick="closeModal()">> SO IT SHALL BE</button>
       <button class="btn-respin" onclick="respin()">> DEFY THE GODS</button>
     </div>
   </div>
@@ -605,31 +605,8 @@ const INITIAL_RESTAURANTS = [
   { name: "Gourmet House", dates: [] }
 ];
 
-// ─── State ───
-const STORAGE_KEY = "restaurantRouletteData";
-
-function loadData() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    const map = new Map(parsed.map(r => [r.name, r]));
-    return INITIAL_RESTAURANTS.map(r => {
-      if (map.has(r.name)) {
-        const saved = map.get(r.name);
-        const allDates = [...new Set([...r.dates, ...saved.dates])];
-        return { name: r.name, dates: allDates };
-      }
-      return { ...r, dates: [...r.dates] };
-    });
-  }
-  return INITIAL_RESTAURANTS.map(r => ({ name: r.name, dates: [...r.dates] }));
-}
-
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(restaurants));
-}
-
-let restaurants = loadData();
+// ─── State (hardcoded — update via git push) ───
+let restaurants = INITIAL_RESTAURANTS;
 
 // ─── Wheel Colors — muted, old-world palette ───
 const COLORS = [
@@ -780,16 +757,6 @@ function showResult(index) {
 
   document.getElementById("resultModal").classList.add("show");
   fireConfetti();
-}
-
-function confirmSelection() {
-  const r = restaurants[selectedIndex];
-  const today = new Date();
-  const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${String(today.getFullYear()).slice(2)}`;
-  r.dates.push(dateStr);
-  saveData();
-  closeModal();
-  renderHistory();
 }
 
 function respin() {
