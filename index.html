@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Restaurant Roulette</title>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -309,11 +310,47 @@
       pointer-events: none;
       z-index: 300;
     }
+
+    /* Ditty Overlay */
+    .ditty-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 150;
+      opacity: 0;
+      transition: opacity 1s ease;
+      background: rgba(26, 26, 46, 0.7);
+    }
+    .ditty-overlay.visible { opacity: 1; }
+    .ditty-overlay.fading { opacity: 0; transition: opacity 1s ease; }
+    .ditty-text {
+      font-family: 'UnifrakturMaguntia', cursive;
+      font-size: 1.8rem;
+      color: var(--gold);
+      text-align: center;
+      line-height: 2.2;
+      text-shadow: 0 0 30px rgba(245, 197, 24, 0.5), 0 0 60px rgba(245, 197, 24, 0.2), 0 2px 4px rgba(0,0,0,0.9);
+      white-space: pre-line;
+      padding: 30px;
+      max-width: 520px;
+    }
   </style>
 </head>
 <body>
 
 <canvas id="confetti-canvas"></canvas>
+
+<div class="ditty-overlay" id="dittyOverlay">
+  <div class="ditty-text">Spin, spin, wheel of fare,
+One hundred lunches in the air!
+Burgers, bowls, or sushi roll—
+Feed the body, fuel the soul!
+Round and round, no time to stall—
+Fortune picks our feast for all!</div>
+</div>
 
 <div class="tab-bar">
   <button class="tab-btn active" data-tab="roulette">🎰 Roulette</button>
@@ -567,6 +604,11 @@ function spin() {
   spinning = true;
   document.getElementById("spinBtn").disabled = true;
 
+  // Show the ditty
+  const ditty = document.getElementById("dittyOverlay");
+  ditty.classList.remove("fading");
+  ditty.classList.add("visible");
+
   // Pick a random target
   const targetIndex = Math.floor(Math.random() * N);
   // We want the pointer (top, -PI/2) to land on this segment
@@ -596,7 +638,7 @@ function spin() {
     return 0.7 * (t / 0.4);
   }
 
-  // Tick sound simulation via subtle visual flicker
+  let dittyFadedOut = false;
   function animate(now) {
     const elapsed = now - startTime;
     const t = Math.min(elapsed / duration, 1);
@@ -604,13 +646,24 @@ function spin() {
     currentRotation = startRotation + totalDelta * eased;
     drawWheel(currentRotation);
 
+    // Fade out ditty 1 second before end
+    if (!dittyFadedOut && elapsed >= duration - 1000) {
+      dittyFadedOut = true;
+      ditty.classList.add("fading");
+    }
+
     if (t < 1) {
       requestAnimationFrame(animate);
     } else {
-      // Done!
-      spinning = false;
-      selectedIndex = targetIndex;
-      showResult(targetIndex);
+      // Done — force ditty fully hidden, then show result
+      ditty.classList.remove("visible", "fading");
+      ditty.style.opacity = "0";
+      setTimeout(() => {
+        ditty.style.opacity = "";
+        spinning = false;
+        selectedIndex = targetIndex;
+        showResult(targetIndex);
+      }, 50);
     }
   }
 
