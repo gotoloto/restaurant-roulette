@@ -576,24 +576,31 @@ function spin() {
   // Solve: rotation = -PI/2 - targetIndex * ARC - ARC/2
   const targetAngle = -Math.PI / 2 - targetIndex * ARC - ARC / 2;
 
-  // Add several full spins (5-8 full rotations)
-  const extraSpins = (5 + Math.random() * 3) * 2 * Math.PI;
+  // LOTS of spins — 15-25 full rotations for drama
+  const extraSpins = (15 + Math.random() * 10) * 2 * Math.PI;
   const finalRotation = targetAngle - extraSpins;
 
   const startRotation = currentRotation;
   const totalDelta = finalRotation - startRotation;
-  const duration = 5000 + Math.random() * 2000; // 5-7 seconds
+  const duration = 7000 + Math.random() * 3000; // 7-10 seconds
   const startTime = performance.now();
 
-  function easeOutQuart(t) {
-    return 1 - Math.pow(1 - t, 4);
+  // Custom easing: fast start, long dramatic slowdown at the end
+  function easeOutExpo(t) {
+    if (t >= 0.4) {
+      // Last 60%: very slow deceleration for suspense
+      const sub = (t - 0.4) / 0.6;
+      return 0.7 + 0.3 * (1 - Math.pow(1 - sub, 5));
+    }
+    // First 40%: rocket up to 70% of rotation
+    return 0.7 * (t / 0.4);
   }
 
   // Tick sound simulation via subtle visual flicker
   function animate(now) {
     const elapsed = now - startTime;
     const t = Math.min(elapsed / duration, 1);
-    const eased = easeOutQuart(t);
+    const eased = easeOutExpo(t);
     currentRotation = startRotation + totalDelta * eased;
     drawWheel(currentRotation);
 
