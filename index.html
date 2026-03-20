@@ -5,86 +5,133 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Restaurant Roulette</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #1a1a2e;
-      --surface: #16213e;
-      --accent: #e94560;
-      --accent2: #0f3460;
-      --text: #eee;
-      --text-dim: #999;
-      --gold: #f5c518;
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #555;
+      --text: #c8c8c8;
+      --text-dim: #666;
+      --highlight: #fff;
+      --accent: #aaa;
+      --gold: #d4aa00;
     }
 
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'VT323', 'Courier New', monospace;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
+      font-size: 18px;
+      image-rendering: pixelated;
+    }
+
+    /* CRT scanline effect */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.15) 0px,
+        rgba(0,0,0,0.15) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 999;
     }
 
     /* Tabs */
     .tab-bar {
       display: flex;
-      background: var(--surface);
-      border-bottom: 2px solid var(--accent2);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
+      font-family: 'VT323', monospace;
     }
     .tab-btn {
       flex: 1;
-      padding: 16px;
+      padding: 12px;
       background: none;
       border: none;
+      border-bottom: 2px solid transparent;
       color: var(--text-dim);
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 22px;
+      font-family: 'VT323', monospace;
       cursor: pointer;
-      transition: all 0.3s;
-      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      letter-spacing: 2px;
     }
     .tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      background: rgba(233, 69, 96, 0.08);
+      color: var(--highlight);
+      border-bottom-color: var(--highlight);
     }
     .tab-btn:hover { color: var(--text); }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* ASCII Box helper */
+    .ascii-box {
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .ascii-box::before {
+      content: attr(data-title);
+      position: absolute;
+      top: -10px;
+      left: 12px;
+      background: var(--bg);
+      padding: 0 6px;
+      color: var(--highlight);
+      font-size: 16px;
+    }
+
     /* Roulette Tab */
     .roulette-page {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 20px;
-      min-height: calc(100vh - 55px);
+      padding: 20px 20px 40px;
+      min-height: calc(100vh - 50px);
     }
 
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .ascii-header {
+      font-family: 'VT323', monospace;
+      color: var(--text);
+      text-align: center;
+      white-space: pre;
+      font-size: 14px;
+      line-height: 1.15;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
     }
-    .subtitle { color: var(--text-dim); margin-bottom: 30px; font-size: 0.95rem; }
+
+    .subtitle {
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      font-size: 20px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
 
     /* Wheel Container */
     .wheel-container {
       position: relative;
       width: 420px;
       height: 420px;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
     @media (max-width: 500px) {
       .wheel-container { width: 320px; height: 320px; }
+      .ascii-header { font-size: 10px; }
     }
 
     .wheel-wrapper {
@@ -97,22 +144,20 @@
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      box-shadow: 0 0 30px rgba(233, 69, 96, 0.3), 0 0 60px rgba(233, 69, 96, 0.1);
     }
 
     /* Pointer */
     .pointer {
       position: absolute;
-      top: -18px;
+      top: -14px;
       left: 50%;
       transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 18px solid transparent;
-      border-right: 18px solid transparent;
-      border-top: 36px solid var(--gold);
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+      color: var(--highlight);
+      font-family: 'VT323', monospace;
+      font-size: 36px;
       z-index: 10;
+      text-shadow: 0 0 8px rgba(255,255,255,0.5);
+      line-height: 1;
     }
 
     /* Center circle */
@@ -121,39 +166,39 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 60px;
-      height: 60px;
+      width: 56px;
+      height: 56px;
       background: var(--bg);
-      border: 4px solid var(--gold);
+      border: 2px solid var(--border);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 14px;
+      font-family: 'VT323', monospace;
+      color: var(--text-dim);
       z-index: 5;
     }
 
     /* Spin Button */
     .spin-btn {
-      padding: 16px 60px;
-      font-size: 1.3rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 50px;
-      background: linear-gradient(135deg, var(--accent), #c0392b);
-      color: white;
+      padding: 14px 50px;
+      font-size: 26px;
+      font-family: 'VT323', monospace;
+      border: 2px solid var(--highlight);
+      background: var(--bg);
+      color: var(--highlight);
       cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+      transition: all 0.15s;
+      letter-spacing: 4px;
       text-transform: uppercase;
-      letter-spacing: 2px;
     }
     .spin-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 30px rgba(233, 69, 96, 0.6);
+      background: var(--highlight);
+      color: var(--bg);
     }
     .spin-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
@@ -162,7 +207,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,0,0.85);
       z-index: 200;
       align-items: center;
       justify-content: center;
@@ -170,138 +215,167 @@
     .modal-overlay.show { display: flex; }
 
     .modal {
-      background: var(--surface);
-      border: 2px solid var(--accent);
-      border-radius: 20px;
-      padding: 40px;
+      background: var(--bg);
+      border: 2px solid var(--highlight);
+      padding: 30px 36px;
       text-align: center;
-      max-width: 440px;
-      width: 90%;
-      animation: popIn 0.4s ease;
+      max-width: 480px;
+      width: 92%;
+      animation: popIn 0.3s ease;
+      position: relative;
     }
     @keyframes popIn {
-      from { transform: scale(0.7); opacity: 0; }
+      from { transform: scale(0.8); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
 
-    .modal h2 { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 12px; }
+    .modal-ascii-border {
+      font-family: 'VT323', monospace;
+      color: var(--text-dim);
+      font-size: 16px;
+      white-space: pre;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .modal h2 {
+      font-size: 22px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      font-family: 'VT323', monospace;
+      font-weight: normal;
+      letter-spacing: 2px;
+    }
     .modal .result-name {
-      font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: var(--gold);
+      font-size: 32px;
+      font-weight: normal;
+      margin-bottom: 10px;
+      color: var(--highlight);
+      font-family: 'VT323', monospace;
+      letter-spacing: 2px;
     }
     .modal .visit-info {
       color: var(--text-dim);
-      margin-bottom: 24px;
-      font-size: 0.95rem;
+      margin-bottom: 8px;
+      font-size: 20px;
     }
     .modal .visit-dates {
       color: var(--text-dim);
-      font-size: 0.85rem;
+      font-size: 18px;
       margin-bottom: 24px;
     }
-    .modal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .modal-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
     .modal-actions button {
-      padding: 12px 28px;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
+      padding: 10px 24px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      font-size: 22px;
+      font-family: 'VT323', monospace;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      color: var(--text);
+      letter-spacing: 2px;
     }
     .btn-confirm {
-      background: linear-gradient(135deg, #27ae60, #2ecc71);
-      color: white;
+      border-color: var(--highlight) !important;
+      color: var(--highlight) !important;
     }
-    .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,204,113,0.4); }
-    .btn-respin {
-      background: linear-gradient(135deg, var(--accent2), #1a4a8a);
-      color: white;
-    }
-    .btn-respin:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(15,52,96,0.4); }
+    .btn-confirm:hover { background: var(--highlight); color: var(--bg) !important; }
+    .btn-respin:hover { border-color: var(--text); background: #222; }
 
     /* History Tab */
-    .history-page { padding: 20px; max-width: 800px; margin: 0 auto; }
+    .history-page { padding: 20px; max-width: 780px; margin: 0 auto; }
     .history-page h2 {
       text-align: center;
       margin-bottom: 20px;
-      color: var(--gold);
+      color: var(--highlight);
+      font-family: 'VT323', monospace;
+      font-size: 28px;
+      font-weight: normal;
+      letter-spacing: 3px;
     }
 
     .sort-bar {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 16px;
       justify-content: center;
       flex-wrap: wrap;
     }
     .sort-btn {
-      padding: 8px 20px;
-      border: 2px solid var(--accent2);
-      border-radius: 8px;
-      background: none;
-      color: var(--text);
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-dim);
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
+      font-size: 18px;
+      font-family: 'VT323', monospace;
+      transition: all 0.15s;
     }
     .sort-btn.active {
-      border-color: var(--accent);
-      background: rgba(233, 69, 96, 0.15);
-      color: var(--accent);
+      border-color: var(--highlight);
+      color: var(--highlight);
+      background: #1a1a1a;
     }
-    .sort-btn:hover { border-color: var(--accent); }
+    .sort-btn:hover { border-color: var(--text); color: var(--text); }
 
     .history-list { list-style: none; }
     .history-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 18px;
-      background: var(--surface);
-      border-radius: 10px;
-      margin-bottom: 8px;
-      border-left: 4px solid var(--accent2);
-      transition: all 0.2s;
+      padding: 8px 12px;
+      border-bottom: 1px solid #222;
+      transition: all 0.15s;
     }
-    .history-item:hover { border-left-color: var(--accent); }
-    .history-item.visited { border-left-color: var(--gold); }
+    .history-item:hover { background: #1a1a1a; }
+    .history-item.visited .history-name::before {
+      content: "* ";
+      color: var(--highlight);
+    }
 
-    .history-name { font-weight: 600; font-size: 1rem; }
+    .history-name {
+      font-size: 20px;
+      color: var(--text);
+    }
     .history-meta { text-align: right; }
     .history-visits {
-      font-size: 0.85rem;
-      color: var(--gold);
-      font-weight: 700;
+      font-size: 18px;
+      color: var(--highlight);
     }
     .history-dates {
-      font-size: 0.75rem;
+      font-size: 16px;
       color: var(--text-dim);
-      margin-top: 2px;
+      margin-top: 1px;
     }
     .history-never {
-      font-size: 0.85rem;
-      color: var(--text-dim);
+      font-size: 18px;
+      color: #444;
     }
 
     .stats-bar {
       display: flex;
-      gap: 20px;
+      gap: 12px;
       justify-content: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
     }
     .stat-card {
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 16px 24px;
+      border: 1px solid var(--border);
+      padding: 10px 18px;
       text-align: center;
-      border: 1px solid var(--accent2);
+      background: var(--bg);
     }
-    .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--gold); }
-    .stat-label { font-size: 0.8rem; color: var(--text-dim); }
+    .stat-number {
+      font-size: 30px;
+      color: var(--highlight);
+      font-family: 'VT323', monospace;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
 
     /* Confetti Canvas */
     #confetti-canvas {
@@ -322,20 +396,31 @@
       z-index: 150;
       opacity: 0;
       transition: opacity 1s ease;
-      background: rgba(26, 26, 46, 0.7);
+      background: rgba(0, 0, 0, 0.8);
     }
     .ditty-overlay.visible { opacity: 1; }
     .ditty-overlay.fading { opacity: 0; transition: opacity 1s ease; }
     .ditty-text {
       font-family: 'UnifrakturMaguntia', cursive;
-      font-size: 1.8rem;
-      color: var(--gold);
+      font-size: 1.7rem;
+      color: #ccc;
       text-align: center;
       line-height: 2.2;
-      text-shadow: 0 0 30px rgba(245, 197, 24, 0.5), 0 0 60px rgba(245, 197, 24, 0.2), 0 2px 4px rgba(0,0,0,0.9);
+      text-shadow: 0 0 20px rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.9);
       white-space: pre-line;
       padding: 30px;
       max-width: 520px;
+    }
+
+    /* Blinking cursor effect */
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    .cursor-blink::after {
+      content: "_";
+      animation: blink 1s infinite;
+      color: var(--highlight);
     }
   </style>
 </head>
@@ -346,44 +431,53 @@
 <div class="ditty-overlay" id="dittyOverlay">
   <div class="ditty-text">Spin, spin, wheel of fare,
 One hundred lunches in the air!
-Burgers, bowls, or sushi roll—
+Burgers, bowls, or sushi roll--
 Feed the body, fuel the soul!
-Round and round, no time to stall—
+Round and round, no time to stall--
 Fortune picks our feast for all!</div>
 </div>
 
 <div class="tab-bar">
-  <button class="tab-btn active" data-tab="roulette">🎰 Roulette</button>
-  <button class="tab-btn" data-tab="history">📋 Visit History</button>
+  <button class="tab-btn active" data-tab="roulette">[ WHEEL ]</button>
+  <button class="tab-btn" data-tab="history">[ LEDGER ]</button>
 </div>
 
 <div id="roulette" class="tab-content active">
   <div class="roulette-page">
-    <h1>Restaurant Roulette</h1>
-    <p class="subtitle">100 restaurants. 1 destiny. Let the wheel decide.</p>
+    <pre class="ascii-header">
+    ___  ____  ___  _____  __   _  _  ____   __   _  _  _____
+   / _ \( ___)/ __)(_   _)/ _\ ( )( \(  _ \ / _\ ( \( )(_   _)
+  )   / )__) \__ \  ) ( /    \ )(/ / )   //    \ )  (   ) (
+  (_)\_)(____)(___/ (___)\\_/\_/(__)( (__)_)\\_/\_/(_)\_) (___)
+         ____   __   _  _  __    ____  _____  _____  ____
+        (  _ \ /  \ ( )( \(  )  ( ___)(_   _)(_   _)( ___)
+         )   /(    ) )(/ / )(__  )__)   ) (    ) (   )__)
+        (_)\_) \__/ (__)( (____)(____)  (___)  (___) (____)
+    </pre>
+    <p class="subtitle cursor-blink">Ye stand before the Wheel of Fate. 100 taverns await</p>
 
     <div class="wheel-container">
-      <div class="pointer"></div>
+      <div class="pointer">V</div>
       <div class="wheel-wrapper">
         <canvas id="wheel" width="840" height="840"></canvas>
       </div>
-      <div class="center-circle">🍽️</div>
+      <div class="center-circle">?</div>
     </div>
 
-    <button class="spin-btn" id="spinBtn" onclick="spin()">Spin!</button>
+    <button class="spin-btn" id="spinBtn" onclick="spin()">> SPIN THE WHEEL</button>
   </div>
 </div>
 
 <div id="history" class="tab-content">
   <div class="history-page">
-    <h2>Visit History</h2>
+    <h2>- - -  THE GRAND LEDGER  - - -</h2>
     <div class="stats-bar" id="statsBar"></div>
     <div class="sort-bar">
-      <button class="sort-btn active" data-sort="alpha-asc">Name A→Z</button>
-      <button class="sort-btn" data-sort="alpha-desc">Name Z→A</button>
-      <button class="sort-btn" data-sort="visits-desc">Most Visited</button>
-      <button class="sort-btn" data-sort="visits-asc">Least Visited</button>
-      <button class="sort-btn" data-sort="recent">Most Recent</button>
+      <button class="sort-btn active" data-sort="alpha-asc">[A-Z]</button>
+      <button class="sort-btn" data-sort="alpha-desc">[Z-A]</button>
+      <button class="sort-btn" data-sort="visits-desc">[MOST VISITED]</button>
+      <button class="sort-btn" data-sort="visits-asc">[LEAST VISITED]</button>
+      <button class="sort-btn" data-sort="recent">[MOST RECENT]</button>
     </div>
     <ul class="history-list" id="historyList"></ul>
   </div>
@@ -392,13 +486,15 @@ Fortune picks our feast for all!</div>
 <!-- Result Modal -->
 <div class="modal-overlay" id="resultModal">
   <div class="modal">
-    <h2>The wheel has spoken!</h2>
+    <div class="modal-ascii-border">+=============================+
+|    THE WHEEL HAS SPOKEN    |
++=============================+</div>
     <div class="result-name" id="resultName"></div>
     <div class="visit-info" id="visitInfo"></div>
     <div class="visit-dates" id="visitDates"></div>
     <div class="modal-actions">
-      <button class="btn-confirm" onclick="confirmSelection()">Let's Go! ✓</button>
-      <button class="btn-respin" onclick="respin()">Spin Again ↻</button>
+      <button class="btn-confirm" onclick="confirmSelection()">> ACCEPT FATE</button>
+      <button class="btn-respin" onclick="respin()">> DEFY THE GODS</button>
     </div>
   </div>
 </div>
@@ -515,12 +611,10 @@ function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     const parsed = JSON.parse(saved);
-    // Merge: keep saved dates but ensure all initial restaurants exist
     const map = new Map(parsed.map(r => [r.name, r]));
     return INITIAL_RESTAURANTS.map(r => {
       if (map.has(r.name)) {
         const saved = map.get(r.name);
-        // Merge initial dates with any new ones
         const allDates = [...new Set([...r.dates, ...saved.dates])];
         return { name: r.name, dates: allDates };
       }
@@ -536,12 +630,12 @@ function saveData() {
 
 let restaurants = loadData();
 
-// ─── Wheel Colors ───
+// ─── Wheel Colors — muted, old-world palette ───
 const COLORS = [
-  "#e94560", "#0f3460", "#f5c518", "#2ecc71", "#e67e22",
-  "#9b59b6", "#1abc9c", "#e74c3c", "#3498db", "#f39c12",
-  "#2c3e50", "#d35400", "#8e44ad", "#16a085", "#c0392b",
-  "#2980b9", "#27ae60", "#f1c40f", "#e91e63", "#00bcd4"
+  "#3a3a3a", "#555", "#2a2a2a", "#4a4a4a", "#333",
+  "#484848", "#2e2e2e", "#404040", "#363636", "#505050",
+  "#3d3d3d", "#454545", "#2c2c2c", "#525252", "#383838",
+  "#4c4c4c", "#303030", "#424242", "#353535", "#4e4e4e"
 ];
 
 // ─── Draw Wheel ───
@@ -567,7 +661,7 @@ function drawWheel(rotation) {
     ctx.closePath();
     ctx.fillStyle = COLORS[i % COLORS.length];
     ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.strokeStyle = "#222";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -576,11 +670,9 @@ function drawWheel(rotation) {
     ctx.translate(cx, cy);
     ctx.rotate(startAngle + ARC / 2);
     ctx.textAlign = "right";
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#bbb";
     const fontSize = Math.min(11, r * ARC * 0.35);
-    ctx.font = `bold ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 2;
+    ctx.font = `${fontSize}px 'VT323', 'Courier New', monospace`;
     ctx.fillText(restaurants[i].name, r - 12, fontSize / 3);
     ctx.restore();
   }
@@ -588,8 +680,15 @@ function drawWheel(rotation) {
   // Outer ring
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-  ctx.strokeStyle = "var(--gold)";
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = "#666";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Inner ring decoration
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 6, 0, 2 * Math.PI);
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 1;
   ctx.stroke();
 }
 
@@ -611,11 +710,6 @@ function spin() {
 
   // Pick a random target
   const targetIndex = Math.floor(Math.random() * N);
-  // We want the pointer (top, -PI/2) to land on this segment
-  // Segment i occupies [i*ARC, (i+1)*ARC] from rotation base
-  // Pointer is at angle -PI/2 (top)
-  // We need: rotation + targetIndex * ARC + ARC/2 ≡ -PI/2 + 2πk (mod 2π)
-  // Solve: rotation = -PI/2 - targetIndex * ARC - ARC/2
   const targetAngle = -Math.PI / 2 - targetIndex * ARC - ARC / 2;
 
   // LOTS of spins — 15-25 full rotations for drama
@@ -624,17 +718,14 @@ function spin() {
 
   const startRotation = currentRotation;
   const totalDelta = finalRotation - startRotation;
-  const duration = 7000 + Math.random() * 3000; // 7-10 seconds
+  const duration = 7000 + Math.random() * 3000;
   const startTime = performance.now();
 
-  // Custom easing: fast start, long dramatic slowdown at the end
   function easeOutExpo(t) {
     if (t >= 0.4) {
-      // Last 60%: very slow deceleration for suspense
       const sub = (t - 0.4) / 0.6;
       return 0.7 + 0.3 * (1 - Math.pow(1 - sub, 5));
     }
-    // First 40%: rocket up to 70% of rotation
     return 0.7 * (t / 0.4);
   }
 
@@ -646,7 +737,6 @@ function spin() {
     currentRotation = startRotation + totalDelta * eased;
     drawWheel(currentRotation);
 
-    // Fade out ditty 1 second before end
     if (!dittyFadedOut && elapsed >= duration - 1000) {
       dittyFadedOut = true;
       ditty.classList.add("fading");
@@ -655,7 +745,6 @@ function spin() {
     if (t < 1) {
       requestAnimationFrame(animate);
     } else {
-      // Done — force ditty fully hidden, then show result
       ditty.classList.remove("visible", "fading");
       ditty.style.opacity = "0";
       setTimeout(() => {
@@ -675,14 +764,14 @@ function showResult(index) {
   const r = restaurants[index];
   const visitCount = r.dates.length;
 
-  document.getElementById("resultName").textContent = r.name;
+  document.getElementById("resultName").textContent = ">>> " + r.name + " <<<";
 
   if (visitCount === 0) {
-    document.getElementById("visitInfo").textContent = "Never visited — a fresh pick!";
+    document.getElementById("visitInfo").textContent = "Uncharted territory! Never before visited.";
     document.getElementById("visitDates").textContent = "";
   } else {
     document.getElementById("visitInfo").textContent = `Visited ${visitCount} time${visitCount > 1 ? "s" : ""} before`;
-    document.getElementById("visitDates").textContent = "Previous visits: " + r.dates.join(", ");
+    document.getElementById("visitDates").textContent = "Previous quests: " + r.dates.join(", ");
   }
 
   document.getElementById("resultModal").classList.add("show");
@@ -709,27 +798,27 @@ function closeModal() {
   document.getElementById("spinBtn").disabled = false;
 }
 
-// ─── Confetti ───
+// ─── Confetti — ASCII style: characters fall instead of colored rectangles ───
 function fireConfetti() {
   const canvas = document.getElementById("confetti-canvas");
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  const chars = ["*", "+", "~", ".", "o", "x", "#", "@", "!", "^", "&", "%"];
   const pieces = [];
-  const colors = ["#e94560", "#f5c518", "#2ecc71", "#3498db", "#e67e22", "#9b59b6", "#ff6b6b", "#ffd93d", "#6bcf7f", "#4ecdc4"];
 
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 150; i++) {
     pieces.push({
       x: Math.random() * canvas.width,
       y: -20 - Math.random() * 300,
-      w: 6 + Math.random() * 8,
-      h: 4 + Math.random() * 6,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      vx: (Math.random() - 0.5) * 4,
+      char: chars[Math.floor(Math.random() * chars.length)],
+      size: 14 + Math.random() * 18,
+      color: `rgba(${180 + Math.random()*75}, ${180 + Math.random()*75}, ${180 + Math.random()*75}, 1)`,
+      vx: (Math.random() - 0.5) * 3,
       vy: 2 + Math.random() * 4,
       rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.2,
+      rotSpeed: (Math.random() - 0.5) * 0.15,
       opacity: 1
     });
   }
@@ -740,10 +829,10 @@ function fireConfetti() {
     let alive = false;
     for (const p of pieces) {
       p.x += p.vx;
-      p.vy += 0.05;
+      p.vy += 0.04;
       p.y += p.vy;
       p.rot += p.rotSpeed;
-      if (frame > 80) p.opacity -= 0.015;
+      if (frame > 80) p.opacity -= 0.012;
 
       if (p.opacity > 0 && p.y < canvas.height + 50) {
         alive = true;
@@ -752,7 +841,9 @@ function fireConfetti() {
         ctx.rotate(p.rot);
         ctx.globalAlpha = Math.max(0, p.opacity);
         ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.font = `${p.size}px 'VT323', monospace`;
+        ctx.textAlign = "center";
+        ctx.fillText(p.char, 0, 0);
         ctx.restore();
       }
     }
@@ -767,17 +858,15 @@ function fireConfetti() {
 let currentSort = "alpha-asc";
 
 function renderHistory() {
-  // Stats
   const visited = restaurants.filter(r => r.dates.length > 0);
   const totalVisits = restaurants.reduce((s, r) => s + r.dates.length, 0);
   document.getElementById("statsBar").innerHTML = `
-    <div class="stat-card"><div class="stat-number">${restaurants.length}</div><div class="stat-label">Total Restaurants</div></div>
-    <div class="stat-card"><div class="stat-number">${visited.length}</div><div class="stat-label">Visited</div></div>
-    <div class="stat-card"><div class="stat-number">${restaurants.length - visited.length}</div><div class="stat-label">Not Yet Tried</div></div>
-    <div class="stat-card"><div class="stat-number">${totalVisits}</div><div class="stat-label">Total Visits</div></div>
+    <div class="stat-card"><div class="stat-number">${restaurants.length}</div><div class="stat-label">TAVERNS</div></div>
+    <div class="stat-card"><div class="stat-number">${visited.length}</div><div class="stat-label">CONQUERED</div></div>
+    <div class="stat-card"><div class="stat-number">${restaurants.length - visited.length}</div><div class="stat-label">UNCHARTED</div></div>
+    <div class="stat-card"><div class="stat-number">${totalVisits}</div><div class="stat-label">QUESTS</div></div>
   `;
 
-  // Sort
   const sorted = [...restaurants];
   switch (currentSort) {
     case "alpha-asc": sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
@@ -802,7 +891,7 @@ function renderHistory() {
           ${v > 0
             ? `<div class="history-visits">${v} visit${v > 1 ? 's' : ''}</div>
                <div class="history-dates">${r.dates.join(', ')}</div>`
-            : `<div class="history-never">Not visited</div>`
+            : `<div class="history-never">-- none --</div>`
           }
         </div>
       </li>`;
@@ -833,7 +922,6 @@ document.querySelectorAll(".sort-btn").forEach(btn => {
 // ─── Init ───
 renderHistory();
 
-// Handle window resize for confetti
 window.addEventListener("resize", () => {
   const c = document.getElementById("confetti-canvas");
   c.width = window.innerWidth;
