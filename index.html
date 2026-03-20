@@ -397,10 +397,22 @@
       z-index: 150;
       opacity: 0;
       transition: opacity 1s ease;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.88);
+      gap: 0;
+      padding: 0 10px;
     }
     .ditty-overlay.visible { opacity: 1; }
     .ditty-overlay.fading { opacity: 0; transition: opacity 1s ease; }
+    .ditty-knight {
+      font-family: 'VT323', monospace;
+      color: var(--gold);
+      white-space: pre;
+      font-size: 16px;
+      line-height: 1.25;
+      flex-shrink: 0;
+      align-self: center;
+      text-shadow: 0 0 12px rgba(212,170,0,0.4);
+    }
     .ditty-text {
       font-family: 'UnifrakturMaguntia', cursive;
       font-size: 1.7rem;
@@ -409,8 +421,11 @@
       line-height: 2.2;
       text-shadow: 0 0 20px rgba(212,170,0,0.3), 0 2px 4px rgba(0,0,0,0.9);
       white-space: pre-line;
-      padding: 30px;
-      max-width: 520px;
+      padding: 20px 10px;
+      max-width: 480px;
+    }
+    @media (max-width: 700px) {
+      .ditty-knight { display: none; }
     }
 
     /* Blinking cursor effect */
@@ -430,12 +445,34 @@
 <canvas id="confetti-canvas"></canvas>
 
 <div class="ditty-overlay" id="dittyOverlay">
+  <pre class="ditty-knight">
+   o
+  /|\
+  -+-,
+  /|\ \
+ / | \ |
+   |  ]|
+  / \  /
+ /   \/
+/|   |\
+  </pre>
   <div class="ditty-text">Spin, spin, wheel of fare,
 One hundred lunches in the air!
 Burgers, bowls, or sushi roll--
 Feed the body, fuel the soul!
 Round and round, no time to stall--
 Fortune picks our feast for all!</div>
+  <pre class="ditty-knight">
+       o
+      /|\
+     ,+-
+    / /|\
+   | / | \
+   |[  |
+    \  / \
+     \/   \
+     /|   |\
+  </pre>
 </div>
 
 <div class="tab-bar">
