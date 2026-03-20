@@ -400,17 +400,22 @@
       background: rgba(0, 0, 0, 0.88);
       gap: 0;
       padding: 0 10px;
+      overflow: hidden;
     }
     .ditty-overlay.visible { opacity: 1; }
     .ditty-overlay.fading { opacity: 0; transition: opacity 1s ease; }
     .ditty-knight {
-      flex-shrink: 0;
-      align-self: center;
-      height: 100vh;
+      position: absolute;
+      top: 0;
+      height: 100%;
       width: auto;
       filter: drop-shadow(0 0 12px rgba(212,170,0,0.4));
     }
+    .ditty-knight.left {
+      left: -5%;
+    }
     .ditty-knight.mirrored {
+      right: -5%;
       transform: scaleX(-1);
     }
     .ditty-text {
@@ -420,9 +425,10 @@
       text-align: center;
       line-height: 2.2;
       text-shadow: 0 0 20px rgba(212,170,0,0.3), 0 2px 4px rgba(0,0,0,0.9);
-      white-space: pre-line;
+      white-space: pre;
       padding: 20px 10px;
-      max-width: 480px;
+      flex-shrink: 0;
+      z-index: 1;
     }
 
     /* Blinking cursor effect */
@@ -442,7 +448,7 @@
 <canvas id="confetti-canvas"></canvas>
 
 <div class="ditty-overlay" id="dittyOverlay">
-  <img class="ditty-knight" src="knight.png" alt="Knight">
+  <img class="ditty-knight left" src="knight.png" alt="Knight">
   <div class="ditty-text">Spin, spin, wheel of fare,
 One hundred lunches in the air!
 Burgers, bowls, or sushi roll--
