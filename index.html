@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Roulette</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --text: #eee;
+      --text-dim: #999;
+      --gold: #f5c518;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 16px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(233, 69, 96, 0.08);
+    }
+    .tab-btn:hover { color: var(--text); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Roulette Tab */
+    .roulette-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      min-height: calc(100vh - 55px);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { color: var(--text-dim); margin-bottom: 30px; font-size: 0.95rem; }
+
+    /* Wheel Container */
+    .wheel-container {
+      position: relative;
+      width: 420px;
+      height: 420px;
+      margin-bottom: 30px;
+    }
+    @media (max-width: 500px) {
+      .wheel-container { width: 320px; height: 320px; }
+    }
+
+    .wheel-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    canvas#wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(233, 69, 96, 0.3), 0 0 60px rgba(233, 69, 96, 0.1);
+    }
+
+    /* Pointer */
+    .pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 36px solid var(--gold);
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+      z-index: 10;
+    }
+
+    /* Center circle */
+    .center-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: var(--bg);
+      border: 4px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      z-index: 5;
+    }
+
+    /* Spin Button */
+    .spin-btn {
+      padding: 16px 60px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, var(--accent), #c0392b);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(233, 69, 96, 0.6);
+    }
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Result Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      max-width: 440px;
+      width: 90%;
+      animation: popIn 0.4s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal h2 { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 12px; }
+    .modal .result-name {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--gold);
+    }
+    .modal .visit-info {
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .modal .visit-dates {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+    .modal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .modal-actions button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-confirm {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: white;
+    }
+    .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,204,113,0.4); }
+    .btn-respin {
+      background: linear-gradient(135deg, var(--accent2), #1a4a8a);
+      color: white;
+    }
+    .btn-respin:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(15,52,96,0.4); }
+
+    /* History Tab */
+    .history-page { padding: 20px; max-width: 800px; margin: 0 auto; }
+    .history-page h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--gold);
+    }
+
+    .sort-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .sort-btn {
+      padding: 8px 20px;
+      border: 2px solid var(--accent2);
+      border-radius: 8px;
+      background: none;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .sort-btn.active {
+      border-color: var(--accent);
+      background: rgba(233, 69, 96, 0.15);
+      color: var(--accent);
+    }
+    .sort-btn:hover { border-color: var(--accent); }
+
+    .history-list { list-style: none; }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border-left: 4px solid var(--accent2);
+      transition: all 0.2s;
+    }
+    .history-item:hover { border-left-color: var(--accent); }
+    .history-item.visited { border-left-color: var(--gold); }
+
+    .history-name { font-weight: 600; font-size: 1rem; }
+    .history-meta { text-align: right; }
+    .history-visits {
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .history-dates {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .history-never {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 16px 24px;
+      text-align: center;
+      border: 1px solid var(--accent2);
+    }
+    .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--gold); }
+    .stat-label { font-size: 0.8rem; color: var(--text-dim); }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 300;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="roulette">🎰 Roulette</button>
+  <button class="tab-btn" data-tab="history">📋 Visit History</button>
+</div>
+
+<div id="roulette" class="tab-content active">
+  <div class="roulette-page">
+    <h1>Restaurant Roulette</h1>
+    <p class="subtitle">100 restaurants. 1 destiny. Let the wheel decide.</p>
+
+    <div class="wheel-container">
+      <div class="pointer"></div>
+      <div class="wheel-wrapper">
+        <canvas id="wheel" width="840" height="840"></canvas>
+      </div>
+      <div class="center-circle">🍽️</div>
+    </div>
+
+    <button class="spin-btn" id="spinBtn" onclick="spin()">Spin!</button>
+  </div>
+</div>
+
+<div id="history" class="tab-content">
+  <div class="history-page">
+    <h2>Visit History</h2>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="sort-bar">
+      <button class="sort-btn active" data-sort="alpha-asc">Name A→Z</button>
+      <button class="sort-btn" data-sort="alpha-desc">Name Z→A</button>
+      <button class="sort-btn" data-sort="visits-desc">Most Visited</button>
+      <button class="sort-btn" data-sort="visits-asc">Least Visited</button>
+    </div>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal">
+    <h2>The wheel has spoken!</h2>
+    <div class="result-name" id="resultName"></div>
+    <div class="visit-info" id="visitInfo"></div>
+    <div class="visit-dates" id="visitDates"></div>
+    <div class="modal-actions">
+      <button class="btn-confirm" onclick="confirmSelection()">Let's Go! ✓</button>
+      <button class="btn-respin" onclick="respin()">Spin Again ↻</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Restaurant Data ───
+const INITIAL_RESTAURANTS = [
+  { name: "Koja Kitchen", dates: [] },
+  { name: "Dish n Dash", dates: [] },
+  { name: "Halal Guys", dates: [] },
+  { name: "Mediterranean Kebab", dates: [] },
+  { name: "Ono Hawaiian BBQ", dates: ["2/13/26"] },
+  { name: "Anantara", dates: [] },
+  { name: "Blaze Pizza", dates: [] },
+  { name: "Bundoo Khan", dates: [] },
+  { name: "In-N-Out", dates: ["12/5/25"] },
+  { name: "Gen Korean BBQ", dates: ["1/5/26"] },
+  { name: "Panda Express", dates: [] },
+  { name: "Costco", dates: [] },
+  { name: "Firehouse Subs", dates: [] },
+  { name: "Five Guys", dates: [] },
+  { name: "Haidilao Hot Pot", dates: [] },
+  { name: "Market Broiler", dates: ["1/30/26"] },
+  { name: "Hiro Nori Ramen", dates: [] },
+  { name: "Panera Bread", dates: [] },
+  { name: "Pho Ha Noi", dates: [] },
+  { name: "Red Hot Chili Pepper", dates: ["1/16/26"] },
+  { name: "Sake2Me", dates: [] },
+  { name: "Habit Burger", dates: [] },
+  { name: "The Kebab Shop", dates: ["2/20/26"] },
+  { name: "Wingstop", dates: ["3/6/26"] },
+  { name: "Zhang Fei Hot Pot", dates: [] },
+  { name: "Korean Bob Sang", dates: [] },
+  { name: "McDonald's", dates: [] },
+  { name: "Zingsters", dates: [] },
+  { name: "Teo Chow Noodle Shack", dates: ["12/12/25"] },
+  { name: "Falaknuma Indian", dates: [] },
+  { name: "Wendy's", dates: ["1/6/26"] },
+  { name: "Sunfish Poke", dates: [] },
+  { name: "Westcoast Sourdough", dates: [] },
+  { name: "Chipotle", dates: [] },
+  { name: "Chick-Fil-A", dates: [] },
+  { name: "Pearl Bay", dates: [] },
+  { name: "Shang Cafe", dates: [] },
+  { name: "Local Cafe", dates: [] },
+  { name: "ABC Chicken", dates: ["2/27/26"] },
+  { name: "Steaking", dates: [] },
+  { name: "Cafe Mei", dates: [] },
+  { name: "General Pot", dates: [] },
+  { name: "Toro Sushi", dates: [] },
+  { name: "Xifu Hot Pot", dates: [] },
+  { name: "Slice House", dates: [] },
+  { name: "Subway", dates: [] },
+  { name: "Habibiz", dates: [] },
+  { name: "Pizza Hut Express", dates: [] },
+  { name: "Tacos Chidos Taqueria", dates: [] },
+  { name: "Falafel Fremont", dates: [] },
+  { name: "SOHO Modern Japanese", dates: [] },
+  { name: "Congee King", dates: [] },
+  { name: "iTea Fremont", dates: [] },
+  { name: "Isla Restaurant", dates: [] },
+  { name: "HalalSteet Hot Pot", dates: [] },
+  { name: "Fu Lam Moon Restaurant", dates: [] },
+  { name: "HUNGRY-COW K BBQ", dates: [] },
+  { name: "Sizzling Lunch", dates: [] },
+  { name: "Tapioca Express", dates: [] },
+  { name: "House of Currys", dates: [] },
+  { name: "Kabob Fusion", dates: [] },
+  { name: "Dope Pho", dates: [] },
+  { name: "Quiznos", dates: [] },
+  { name: "Straw Hat Pizza", dates: [] },
+  { name: "Jack in the Box", dates: [] },
+  { name: "Tacos La Lomita", dates: [] },
+  { name: "TOGO's", dates: [] },
+  { name: "MJ Sushi", dates: [] },
+  { name: "Old Street Chengpan Malatang", dates: [] },
+  { name: "Northwest China Cuisine", dates: [] },
+  { name: "Soo Ja Fusion Bistro", dates: [] },
+  { name: "Special Noodle", dates: [] },
+  { name: "Shanghai Delight", dates: [] },
+  { name: "World Gourmet Buffet Restaurant", dates: [] },
+  { name: "Eggholic - Indian Street Food", dates: [] },
+  { name: "Hyderabad Dum Biryani", dates: [] },
+  { name: "Kakuna Sushi", dates: [] },
+  { name: "Always Cool BBQ", dates: [] },
+  { name: "Taqueria Las Vegas & Bar", dates: [] },
+  { name: "Eli's Sports Bar & Lounge", dates: [] },
+  { name: "Guanatos Tacos", dates: [] },
+  { name: "786 Kabob House Newark", dates: [] },
+  { name: "Chandni Restaurant", dates: [] },
+  { name: "Saint Pita", dates: [] },
+  { name: "Tacos El Kiko", dates: [] },
+  { name: "Full House Dumpling", dates: [] },
+  { name: "Monasaba Cafe", dates: [] },
+  { name: "i Pizza", dates: ["3/13/26"] },
+  { name: "Soo Ja Seolleongtang", dates: [] },
+  { name: "Vince's Cafe", dates: [] },
+  { name: "Domino's Pizza", dates: [] },
+  { name: "Line Thai", dates: [] },
+  { name: "Deccan Morsels", dates: [] },
+  { name: "Karikku Cafe", dates: [] },
+  { name: "Poke House - Warm Springs", dates: [] },
+  { name: "Amazing Basil & A Cup Of", dates: [] },
+  { name: "Boiling Point", dates: [] },
+  { name: "Mom's Tofu House", dates: [] },
+  { name: "Roll n Crust", dates: [] },
+  { name: "Gourmet House", dates: [] }
+];
+
+// ─── State ───
+const STORAGE_KEY = "restaurantRouletteData";
+
+function loadData() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    // Merge: keep saved dates but ensure all initial restaurants exist
+    const map = new Map(parsed.map(r => [r.name, r]));
+    return INITIAL_RESTAURANTS.map(r => {
+      if (map.has(r.name)) {
+        const saved = map.get(r.name);
+        // Merge initial dates with any new ones
+        const allDates = [...new Set([...r.dates, ...saved.dates])];
+        return { name: r.name, dates: allDates };
+      }
+      return { ...r, dates: [...r.dates] };
+    });
+  }
+  return INITIAL_RESTAURANTS.map(r => ({ name: r.name, dates: [...r.dates] }));
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(restaurants));
+}
+
+let restaurants = loadData();
+
+// ─── Wheel Colors ───
+const COLORS = [
+  "#e94560", "#0f3460", "#f5c518", "#2ecc71", "#e67e22",
+  "#9b59b6", "#1abc9c", "#e74c3c", "#3498db", "#f39c12",
+  "#2c3e50", "#d35400", "#8e44ad", "#16a085", "#c0392b",
+  "#2980b9", "#27ae60", "#f1c40f", "#e91e63", "#00bcd4"
+];
+
+// ─── Draw Wheel ───
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const N = restaurants.length;
+const ARC = (2 * Math.PI) / N;
+let currentRotation = 0;
+
+function drawWheel(rotation) {
+  const W = canvas.width;
+  const cx = W / 2, cy = W / 2, r = W / 2 - 4;
+  ctx.clearRect(0, 0, W, W);
+
+  for (let i = 0; i < N; i++) {
+    const startAngle = rotation + i * ARC;
+    const endAngle = startAngle + ARC;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Text
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + ARC / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    const fontSize = Math.min(11, r * ARC * 0.35);
+    ctx.font = `bold ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 2;
+    ctx.fillText(restaurants[i].name, r - 12, fontSize / 3);
+    ctx.restore();
+  }
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = "var(--gold)";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+}
+
+drawWheel(0);
+
+// ─── Spin Logic ───
+let spinning = false;
+let selectedIndex = null;
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById("spinBtn").disabled = true;
+
+  // Pick a random target
+  const targetIndex = Math.floor(Math.random() * N);
+  // We want the pointer (top, -PI/2) to land on this segment
+  // Segment i occupies [i*ARC, (i+1)*ARC] from rotation base
+  // Pointer is at angle -PI/2 (top)
+  // We need: rotation + targetIndex * ARC + ARC/2 ≡ -PI/2 + 2πk (mod 2π)
+  // Solve: rotation = -PI/2 - targetIndex * ARC - ARC/2
+  const targetAngle = -Math.PI / 2 - targetIndex * ARC - ARC / 2;
+
+  // Add several full spins (5-8 full rotations)
+  const extraSpins = (5 + Math.random() * 3) * 2 * Math.PI;
+  const finalRotation = targetAngle - extraSpins;
+
+  const startRotation = currentRotation;
+  const totalDelta = finalRotation - startRotation;
+  const duration = 5000 + Math.random() * 2000; // 5-7 seconds
+  const startTime = performance.now();
+
+  function easeOutQuart(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  // Tick sound simulation via subtle visual flicker
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const eased = easeOutQuart(t);
+    currentRotation = startRotation + totalDelta * eased;
+    drawWheel(currentRotation);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Done!
+      spinning = false;
+      selectedIndex = targetIndex;
+      showResult(targetIndex);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ─── Result Modal ───
+function showResult(index) {
+  const r = restaurants[index];
+  const visitCount = r.dates.length;
+
+  document.getElementById("resultName").textContent = r.name;
+
+  if (visitCount === 0) {
+    document.getElementById("visitInfo").textContent = "Never visited — a fresh pick!";
+    document.getElementById("visitDates").textContent = "";
+  } else {
+    document.getElementById("visitInfo").textContent = `Visited ${visitCount} time${visitCount > 1 ? "s" : ""} before`;
+    document.getElementById("visitDates").textContent = "Previous visits: " + r.dates.join(", ");
+  }
+
+  document.getElementById("resultModal").classList.add("show");
+  fireConfetti();
+}
+
+function confirmSelection() {
+  const r = restaurants[selectedIndex];
+  const today = new Date();
+  const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${String(today.getFullYear()).slice(2)}`;
+  r.dates.push(dateStr);
+  saveData();
+  closeModal();
+  renderHistory();
+}
+
+function respin() {
+  closeModal();
+  spin();
+}
+
+function closeModal() {
+  document.getElementById("resultModal").classList.remove("show");
+  document.getElementById("spinBtn").disabled = false;
+}
+
+// ─── Confetti ───
+function fireConfetti() {
+  const canvas = document.getElementById("confetti-canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const colors = ["#e94560", "#f5c518", "#2ecc71", "#3498db", "#e67e22", "#9b59b6", "#ff6b6b", "#ffd93d", "#6bcf7f", "#4ecdc4"];
+
+  for (let i = 0; i < 200; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * 300,
+      w: 6 + Math.random() * 8,
+      h: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.2,
+      opacity: 1
+    });
+  }
+
+  let frame = 0;
+  function animateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (const p of pieces) {
+      p.x += p.vx;
+      p.vy += 0.05;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      if (frame > 80) p.opacity -= 0.015;
+
+      if (p.opacity > 0 && p.y < canvas.height + 50) {
+        alive = true;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+    }
+    frame++;
+    if (alive) requestAnimationFrame(animateConfetti);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  requestAnimationFrame(animateConfetti);
+}
+
+// ─── History Tab ───
+let currentSort = "alpha-asc";
+
+function renderHistory() {
+  // Stats
+  const visited = restaurants.filter(r => r.dates.length > 0);
+  const totalVisits = restaurants.reduce((s, r) => s + r.dates.length, 0);
+  document.getElementById("statsBar").innerHTML = `
+    <div class="stat-card"><div class="stat-number">${restaurants.length}</div><div class="stat-label">Total Restaurants</div></div>
+    <div class="stat-card"><div class="stat-number">${visited.length}</div><div class="stat-label">Visited</div></div>
+    <div class="stat-card"><div class="stat-number">${restaurants.length - visited.length}</div><div class="stat-label">Not Yet Tried</div></div>
+    <div class="stat-card"><div class="stat-number">${totalVisits}</div><div class="stat-label">Total Visits</div></div>
+  `;
+
+  // Sort
+  const sorted = [...restaurants];
+  switch (currentSort) {
+    case "alpha-asc": sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
+    case "alpha-desc": sorted.sort((a, b) => b.name.localeCompare(a.name)); break;
+    case "visits-desc": sorted.sort((a, b) => b.dates.length - a.dates.length || a.name.localeCompare(b.name)); break;
+    case "visits-asc": sorted.sort((a, b) => a.dates.length - b.dates.length || a.name.localeCompare(b.name)); break;
+  }
+
+  const list = document.getElementById("historyList");
+  list.innerHTML = sorted.map(r => {
+    const v = r.dates.length;
+    return `
+      <li class="history-item ${v > 0 ? 'visited' : ''}">
+        <span class="history-name">${r.name}</span>
+        <div class="history-meta">
+          ${v > 0
+            ? `<div class="history-visits">${v} visit${v > 1 ? 's' : ''}</div>
+               <div class="history-dates">${r.dates.join(', ')}</div>`
+            : `<div class="history-never">Not visited</div>`
+          }
+        </div>
+      </li>`;
+  }).join("");
+}
+
+// ─── Tab Switching ───
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "history") renderHistory();
+  });
+});
+
+// ─── Sort Buttons ───
+document.querySelectorAll(".sort-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentSort = btn.dataset.sort;
+    renderHistory();
+  });
+});
+
+// ─── Init ───
+renderHistory();
+
+// Handle window resize for confetti
+window.addEventListener("resize", () => {
+  const c = document.getElementById("confetti-canvas");
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+});
+</script>
+
+</body>
+</html>
