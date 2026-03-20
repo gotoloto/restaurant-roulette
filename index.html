@@ -346,6 +346,7 @@
       <button class="sort-btn" data-sort="alpha-desc">Name Z→A</button>
       <button class="sort-btn" data-sort="visits-desc">Most Visited</button>
       <button class="sort-btn" data-sort="visits-asc">Least Visited</button>
+      <button class="sort-btn" data-sort="recent">Most Recent</button>
     </div>
     <ul class="history-list" id="historyList"></ul>
   </div>
@@ -723,6 +724,12 @@ function renderHistory() {
     case "alpha-desc": sorted.sort((a, b) => b.name.localeCompare(a.name)); break;
     case "visits-desc": sorted.sort((a, b) => b.dates.length - a.dates.length || a.name.localeCompare(b.name)); break;
     case "visits-asc": sorted.sort((a, b) => a.dates.length - b.dates.length || a.name.localeCompare(b.name)); break;
+    case "recent": sorted.sort((a, b) => {
+      const parseDate = d => { const [m, day, y] = d.split("/").map(Number); return new Date(2000 + y, m - 1, day); };
+      const lastA = a.dates.length ? Math.max(...a.dates.map(d => parseDate(d).getTime())) : 0;
+      const lastB = b.dates.length ? Math.max(...b.dates.map(d => parseDate(d).getTime())) : 0;
+      return lastB - lastA || a.name.localeCompare(b.name);
+    }); break;
   }
 
   const list = document.getElementById("historyList");
