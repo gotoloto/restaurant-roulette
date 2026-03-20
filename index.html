@@ -709,13 +709,10 @@ function spin() {
   ditty.classList.remove("fading");
   ditty.classList.add("visible");
 
-  // Pick a random target
-  const targetIndex = Math.floor(Math.random() * N);
-  const targetAngle = -Math.PI / 2 - targetIndex * ARC - ARC / 2;
-
-  // LOTS of spins — 15-25 full rotations for drama
+  // Spin to a random final angle, then figure out what's under the pointer
   const extraSpins = (15 + Math.random() * 10) * 2 * Math.PI;
-  const finalRotation = targetAngle - extraSpins;
+  const randomOffset = Math.random() * 2 * Math.PI;
+  const finalRotation = currentRotation - extraSpins - randomOffset;
 
   const startRotation = currentRotation;
   const totalDelta = finalRotation - startRotation;
@@ -751,8 +748,14 @@ function spin() {
       setTimeout(() => {
         ditty.style.opacity = "";
         spinning = false;
-        selectedIndex = targetIndex;
-        showResult(targetIndex);
+        // Determine which segment is under the pointer (top = -PI/2)
+        // Segment i spans from [currentRotation + i*ARC] to [currentRotation + (i+1)*ARC]
+        // Pointer is at angle -PI/2. Normalize to find which segment it falls in.
+        const pointerAngle = -Math.PI / 2;
+        let normAngle = ((pointerAngle - currentRotation) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const landedIndex = Math.floor(normAngle / ARC) % N;
+        selectedIndex = landedIndex;
+        showResult(landedIndex);
       }, 50);
     }
   }
