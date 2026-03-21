@@ -725,79 +725,70 @@ function triggerEasterEgg() {
   const dialogue = document.getElementById("easterDialogue");
   const img = document.getElementById("easterImg");
 
-  // Start the wheel spinning normally first (3 seconds of normal spin)
+  // Wheel keeps spinning the whole time while fading to black
   const startRotation = currentRotation;
-  const spinDelta = -(8 + Math.random() * 5) * 2 * Math.PI;
+  const spinDelta = -(30 + Math.random() * 15) * 2 * Math.PI; // lots of spins
   const spinStart = performance.now();
-  const spinDuration = 3000;
+  const spinDuration = 12000; // 12 seconds of spinning
 
   wheelEl.classList.remove("unzooming");
   wheelEl.classList.add("zoomed");
 
+  // Start fading to black immediately while wheel is still spinning/zoomed
+  overlay.classList.add("active");
+  requestAnimationFrame(() => {
+    overlay.classList.add("fade-bg");
+  });
+  roulettePage.style.transition = "opacity 10s ease";
+  roulettePage.style.opacity = "0";
+
   function spinPhase(now) {
     const t = Math.min((now - spinStart) / spinDuration, 1);
-    currentRotation = startRotation + spinDelta * t;
+    // Ease out the spin gradually
+    const eased = 1 - Math.pow(1 - t, 2);
+    currentRotation = startRotation + spinDelta * eased;
     drawWheel(currentRotation);
     if (t < 1) {
       requestAnimationFrame(spinPhase);
-    } else {
-      // Unzoom first
-      wheelEl.classList.remove("zoomed");
-      wheelEl.classList.add("unzooming");
-      setTimeout(() => {
-        wheelEl.classList.remove("unzooming");
-        beginEasterSequence();
-      }, 800);
     }
+    // Just let it stop, no unzoom — it's already faded to black by now
   }
 
-  function beginEasterSequence() {
-    // Show overlay, fade background to black
-    overlay.classList.add("active");
-    requestAnimationFrame(() => {
-      overlay.classList.add("fade-bg");
-    });
+  // Show dialogue after 10s (wheel is mostly faded by now)
+  setTimeout(() => {
+    dialogue.classList.add("show");
+  }, 10000);
 
-    // Fade the whole page content behind
-    roulettePage.style.transition = "opacity 10s ease";
-    roulettePage.style.opacity = "0";
+  // Fade in Chuck E. after 14s
+  setTimeout(() => {
+    img.classList.add("show");
+  }, 14000);
 
-    // Show dialogue after 6s
-    setTimeout(() => {
-      dialogue.classList.add("show");
-    }, 6000);
+  // Fire confetti and show result after 20s
+  setTimeout(() => {
+    wheelEl.classList.remove("zoomed");
+    fireConfetti();
 
-    // Fade in the image after 12s
-    setTimeout(() => {
-      img.classList.add("show");
-    }, 12000);
+    document.getElementById("resultName").textContent = ">>> Chuck E. Cheese <<<";
+    document.getElementById("visitInfo").textContent = "The 101st tavern reveals itself!";
+    document.getElementById("visitDates").textContent = "Where a kid can be a kid.";
+    document.getElementById("resultModal").classList.add("show");
 
-    // Fire confetti and show result after 18s
-    setTimeout(() => {
-      fireConfetti();
+    spinning = false;
+    document.getElementById("spinBtn").disabled = false;
+  }, 20000);
 
-      // Show the result modal with Chuck E. Cheese
-      document.getElementById("resultName").textContent = ">>> Chuck E. Cheese <<<";
-      document.getElementById("visitInfo").textContent = "The 101st tavern reveals itself!";
-      document.getElementById("visitDates").textContent = "Where a kid can be a kid.";
-      document.getElementById("resultModal").classList.add("show");
-
-      spinning = false;
-      document.getElementById("spinBtn").disabled = false;
-    }, 6000);
-
-    // Clean up easter overlay when modal is eventually closed
-    const origClose = window.closeModal;
-    window.closeModal = function() {
-      origClose();
-      overlay.classList.remove("active", "fade-bg");
-      dialogue.classList.remove("show");
-      img.classList.remove("show");
-      roulettePage.style.transition = "opacity 0.5s ease";
-      roulettePage.style.opacity = "1";
-      window.closeModal = origClose;
-    };
-  }
+  // Clean up easter overlay when modal is eventually closed
+  const origClose = window.closeModal;
+  window.closeModal = function() {
+    origClose();
+    overlay.classList.remove("active", "fade-bg");
+    dialogue.classList.remove("show");
+    img.classList.remove("show");
+    roulettePage.style.transition = "opacity 0.5s ease";
+    roulettePage.style.opacity = "1";
+    window.closeModal = origClose;
+  };
 
   requestAnimationFrame(spinPhase);
 }
