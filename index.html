@@ -203,44 +203,38 @@
       line-height: 1;
     }
 
-    /* Center circle */
-    .center-circle {
+    /* Center spin button */
+    .center-spin {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 56px;
-      height: 56px;
+      width: 80px;
+      height: 80px;
       background: var(--bg);
-      border: 2px solid var(--border);
+      border: 2px solid var(--gold);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 11px;
       font-family: 'VT323', monospace;
-      color: var(--text-dim);
-      z-index: 5;
-    }
-
-    /* Spin Button */
-    .spin-btn {
-      padding: 14px 50px;
-      font-size: 26px;
-      font-family: 'VT323', monospace;
-      border: 2px solid var(--gold);
-      background: var(--bg);
       color: var(--gold);
+      z-index: 5;
       cursor: pointer;
-      transition: all 0.15s;
-      letter-spacing: 4px;
+      transition: all 0.2s;
+      letter-spacing: 1px;
       text-transform: uppercase;
+      line-height: 1.2;
+      text-align: center;
+      padding: 4px;
     }
-    .spin-btn:hover:not(:disabled) {
+    .center-spin:hover:not(:disabled) {
       background: var(--gold);
       color: var(--bg);
+      box-shadow: 0 0 20px rgba(184,134,11,0.5);
     }
-    .spin-btn:disabled {
+    .center-spin:disabled {
       opacity: 0.3;
       cursor: not-allowed;
     }
@@ -466,12 +460,10 @@
         <div class="wheel-wrapper">
           <canvas id="wheel" width="2100" height="2100"></canvas>
         </div>
-        <div class="center-circle">?</div>
+        <button class="center-spin" id="spinBtn" onclick="spin()">SPIN</button>
       </div>
       <img class="page-knight mirrored" src="knight.png" alt="Knight">
     </div>
-
-    <button class="spin-btn" id="spinBtn" onclick="spin()">> SPIN THE WHEEL</button>
   </div>
 </div>
 
