@@ -423,6 +423,44 @@
     }
 
 
+    /* Easter egg overlay */
+    .easter-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: background 2s ease;
+    }
+    .easter-overlay.active {
+      display: flex;
+    }
+    .easter-overlay.fade-bg {
+      background: rgba(0,0,0,0.95);
+    }
+    .easter-dialogue {
+      font-family: 'VT323', monospace;
+      color: var(--text);
+      font-size: 36px;
+      letter-spacing: 3px;
+      opacity: 0;
+      transition: opacity 1s ease;
+      margin-bottom: 40px;
+    }
+    .easter-dialogue.show { opacity: 1; }
+    .easter-img {
+      max-width: 500px;
+      max-height: 60vh;
+      opacity: 0;
+      transition: opacity 2s ease;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 40px rgba(184,134,11,0.4);
+    }
+    .easter-img.show { opacity: 1; }
+
     /* Blinking cursor effect */
     @keyframes blink {
       0%, 50% { opacity: 1; }
@@ -480,6 +518,12 @@
     </div>
     <ul class="history-list" id="historyList"></ul>
   </div>
+</div>
+
+<!-- Easter Egg Overlay -->
+<div class="easter-overlay" id="easterOverlay">
+  <div class="easter-dialogue" id="easterDialogue">What's going on??</div>
+  <img class="easter-img" id="easterImg" src="cc.jpg" alt="">
 </div>
 
 <!-- Result Modal -->
@@ -674,10 +718,100 @@ drawWheel(0);
 let spinning = false;
 let selectedIndex = null;
 
+function triggerEasterEgg() {
+  const wheelEl = document.getElementById("wheelContainer");
+  const roulettePage = document.querySelector(".roulette-page");
+  const overlay = document.getElementById("easterOverlay");
+  const dialogue = document.getElementById("easterDialogue");
+  const img = document.getElementById("easterImg");
+
+  // Start the wheel spinning normally first (3 seconds of normal spin)
+  const startRotation = currentRotation;
+  const spinDelta = -(8 + Math.random() * 5) * 2 * Math.PI;
+  const spinStart = performance.now();
+  const spinDuration = 3000;
+
+  wheelEl.classList.remove("unzooming");
+  wheelEl.classList.add("zoomed");
+
+  function spinPhase(now) {
+    const t = Math.min((now - spinStart) / spinDuration, 1);
+    currentRotation = startRotation + spinDelta * t;
+    drawWheel(currentRotation);
+    if (t < 1) {
+      requestAnimationFrame(spinPhase);
+    } else {
+      // Unzoom first
+      wheelEl.classList.remove("zoomed");
+      wheelEl.classList.add("unzooming");
+      setTimeout(() => {
+        wheelEl.classList.remove("unzooming");
+        beginEasterSequence();
+      }, 800);
+    }
+  }
+
+  function beginEasterSequence() {
+    // Show overlay, fade background to black
+    overlay.classList.add("active");
+    requestAnimationFrame(() => {
+      overlay.classList.add("fade-bg");
+    });
+
+    // Fade the whole page content behind
+    roulettePage.style.transition = "opacity 2s ease";
+    roulettePage.style.opacity = "0";
+
+    // Show dialogue after 1.5s
+    setTimeout(() => {
+      dialogue.classList.add("show");
+    }, 1500);
+
+    // Fade in the image after 3.5s
+    setTimeout(() => {
+      img.classList.add("show");
+    }, 3500);
+
+    // Fire confetti and show result after 6s
+    setTimeout(() => {
+      fireConfetti();
+
+      // Show the result modal with Chuck E. Cheese
+      document.getElementById("resultName").textContent = ">>> Chuck E. Cheese <<<";
+      document.getElementById("visitInfo").textContent = "The 101st tavern reveals itself!";
+      document.getElementById("visitDates").textContent = "Where a kid can be a kid.";
+      document.getElementById("resultModal").classList.add("show");
+
+      spinning = false;
+      document.getElementById("spinBtn").disabled = false;
+    }, 6000);
+
+    // Clean up easter overlay when modal is eventually closed
+    const origClose = window.closeModal;
+    window.closeModal = function() {
+      origClose();
+      overlay.classList.remove("active", "fade-bg");
+      dialogue.classList.remove("show");
+      img.classList.remove("show");
+      roulettePage.style.transition = "opacity 0.5s ease";
+      roulettePage.style.opacity = "1";
+      window.closeModal = origClose;
+    };
+  }
+
+  requestAnimationFrame(spinPhase);
+}
+
 function spin() {
   if (spinning) return;
   spinning = true;
   document.getElementById("spinBtn").disabled = true;
+
+  // Easter egg: ~1 in 20 chance
+  if (Math.random() < 0.05) {
+    triggerEasterEgg();
+    return;
+  }
 
   const wheelEl = document.getElementById("wheelContainer");
 
