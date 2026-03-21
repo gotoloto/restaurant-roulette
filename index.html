@@ -433,7 +433,7 @@
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      transition: background 2s ease;
+      transition: background 10s ease;
     }
     .easter-overlay.active {
       display: flex;
@@ -447,7 +447,7 @@
       font-size: 36px;
       letter-spacing: 3px;
       opacity: 0;
-      transition: opacity 1s ease;
+      transition: opacity 2s ease;
       margin-bottom: 40px;
     }
     .easter-dialogue.show { opacity: 1; }
@@ -455,7 +455,7 @@
       max-width: 500px;
       max-height: 60vh;
       opacity: 0;
-      transition: opacity 2s ease;
+      transition: opacity 4s ease;
       border: 3px solid var(--gold);
       box-shadow: 0 0 40px rgba(184,134,11,0.4);
     }
@@ -759,20 +759,20 @@ function triggerEasterEgg() {
     });
 
     // Fade the whole page content behind
-    roulettePage.style.transition = "opacity 2s ease";
+    roulettePage.style.transition = "opacity 10s ease";
     roulettePage.style.opacity = "0";
 
-    // Show dialogue after 1.5s
+    // Show dialogue after 6s
     setTimeout(() => {
       dialogue.classList.add("show");
-    }, 1500);
+    }, 6000);
 
-    // Fade in the image after 3.5s
+    // Fade in the image after 12s
     setTimeout(() => {
       img.classList.add("show");
-    }, 3500);
+    }, 12000);
 
-    // Fire confetti and show result after 6s
+    // Fire confetti and show result after 18s
     setTimeout(() => {
       fireConfetti();
 
