@@ -798,8 +798,8 @@ function spin() {
   spinning = true;
   document.getElementById("spinBtn").disabled = true;
 
-  // Easter egg: 1 in 101 chance — the hidden 101st entry
-  if (Math.random() < 1/101) {
+  // Easter egg: temporarily 1 in 5 for demo, change back to 1/101
+  if (Math.random() < 1/5) {
     triggerEasterEgg();
     return;
   }
