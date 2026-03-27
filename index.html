@@ -6,6 +6,8 @@
   <title>Restaurant Roulette</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -537,25 +539,24 @@
       font-size: 22px;
       letter-spacing: 2px;
     }
-    #questMapCanvas {
+    #questMap {
       border-radius: 4px;
       background: #0a0a0a;
     }
-    .map-tooltip {
-      display: none;
-      position: fixed;
-      background: #111;
-      border: 1px solid #b8860b;
-      color: #c8c8c8;
-      font-family: 'VT323', monospace;
-      font-size: 16px;
-      padding: 8px 12px;
-      pointer-events: none;
-      z-index: 100;
+    .leaflet-container { background: #0a0a0a !important; }
+    .leaflet-popup-content-wrapper {
+      background: #111 !important;
+      color: #c8c8c8 !important;
+      border: 1px solid #b8860b !important;
+      border-radius: 2px !important;
+      font-family: 'VT323', monospace !important;
+      font-size: 16px !important;
     }
-    .map-tooltip .tt-name { color: #b8860b; font-size: 20px; }
-    .map-tooltip .tt-info { color: #888; }
-    .map-tooltip .tt-dates { color: #aaa; font-size: 14px; }
+    .leaflet-popup-tip { background: #111 !important; }
+    .leaflet-popup-content { margin: 10px 14px !important; }
+    .map-popup-name { color: #b8860b; font-size: 20px; margin-bottom: 4px; }
+    .map-popup-info { color: #888; }
+    .map-popup-dates { color: #aaa; font-size: 14px; }
 
     /* Blinking cursor effect */
     @keyframes blink {
@@ -629,8 +630,7 @@
   <div class="questmap-page">
     <h2>- - -  THE HERO'S JOURNEY  - - -</h2>
     <div class="questmap-stats" id="questmapStats"></div>
-    <canvas id="questMapCanvas" style="width:100%; border:1px solid #333; margin-top:12px;"></canvas>
-    <div class="map-tooltip" id="mapTooltip"></div>
+    <div id="questMap" style="width:100%; height:70vh; border:1px solid #333; margin-top:12px;"></div>
   </div>
 </div>
 
@@ -1125,141 +1125,81 @@ function renderGallery() {
 }
 
 // ─── Map ───
-let mapPoints = [];
+let questMapInited = false;
+let questMapInstance = null;
 
 function renderQuestMap() {
-  const canvas = document.getElementById("questMapCanvas");
-  const tooltip = document.getElementById("mapTooltip");
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.parentElement.clientWidth;
-  const h = Math.min(w * 0.7, window.innerHeight * 0.7);
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  canvas.style.height = h + "px";
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
-
   const visited = restaurants.filter(r => r.dates.length > 0)
     .sort((a, b) => new Date(a.dates[0]) - new Date(b.dates[0]));
 
   document.getElementById("questmapStats").textContent =
     `Taverns Conquered: ${visited.length} / ${restaurants.length}`;
 
-  // Find bounds with padding
-  const allWithCoords = restaurants.filter(r => r.lat && r.lng);
-  const lats = allWithCoords.map(r => r.lat);
-  const lngs = allWithCoords.map(r => r.lng);
-  const pad = 0.003;
-  const minLat = Math.min(...lats) - pad, maxLat = Math.max(...lats) + pad;
-  const minLng = Math.min(...lngs) - pad, maxLng = Math.max(...lngs) + pad;
-
-  const margin = 40;
-  function toX(lng) { return margin + ((lng - minLng) / (maxLng - minLng)) * (w - margin * 2); }
-  function toY(lat) { return margin + ((maxLat - lat) / (maxLat - minLat)) * (h - margin * 2); }
-
-  // Clear
-  ctx.fillStyle = "#0a0a0a";
-  ctx.fillRect(0, 0, w, h);
-
-  // Grid lines (subtle)
-  ctx.strokeStyle = "#1a1a1a";
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 8; i++) {
-    const x = margin + (i / 8) * (w - margin * 2);
-    const y = margin + (i / 8) * (h - margin * 2);
-    ctx.beginPath(); ctx.moveTo(x, margin); ctx.lineTo(x, h - margin); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(w - margin, y); ctx.stroke();
+  if (questMapInited) {
+    questMapInstance.invalidateSize();
+    return;
   }
+  questMapInited = true;
 
-  // Store point positions for hover
-  mapPoints = [];
+  const map = L.map("questMap", { zoomControl: true }).setView([37.505, -121.965], 13);
+  questMapInstance = map;
 
-  // Home base
-  const hx = toX(-121.9620), hy = toY(37.5043);
-  ctx.beginPath();
-  ctx.arc(hx, hy, 6, 0, Math.PI * 2);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-  ctx.strokeStyle = "#b8860b";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  mapPoints.push({ x: hx, y: hy, r: 8, name: "Home Base", info: "44370 Christy St", dates: [] });
+  // No tile layer — blank black background via CSS
 
-  // Unvisited (dim dots)
+  // Home base marker
+  const homeIcon = L.divIcon({
+    className: "",
+    html: '<div style="width:14px;height:14px;background:#fff;border:2px solid #b8860b;border-radius:50%;box-shadow:0 0 8px rgba(184,134,11,0.6);"></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+  L.marker([37.5043, -121.9620], { icon: homeIcon })
+    .bindPopup('<div class="map-popup-name">Home Base</div><div class="map-popup-info">44370 Christy St</div>')
+    .addTo(map);
+
+  // Unvisited markers (dim grey dots)
+  const unvisitedIcon = L.divIcon({
+    className: "",
+    html: '<div style="width:6px;height:6px;background:#333;border-radius:50%;"></div>',
+    iconSize: [6, 6],
+    iconAnchor: [3, 3]
+  });
   restaurants.filter(r => r.dates.length === 0 && r.lat && r.lng).forEach(r => {
-    const x = toX(r.lng), y = toY(r.lat);
-    ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = "#333";
-    ctx.fill();
-    mapPoints.push({ x, y, r: 6, name: r.name, info: "Uncharted territory", dates: [] });
+    L.marker([r.lat, r.lng], { icon: unvisitedIcon })
+      .bindPopup(`<div class="map-popup-name">${r.name}</div><div class="map-popup-info" style="color:#666;">Uncharted territory</div>`)
+      .addTo(map);
   });
 
-  // Quest path dashed line
-  if (visited.length > 1) {
-    ctx.beginPath();
-    ctx.setLineDash([6, 4]);
-    ctx.strokeStyle = "rgba(184,134,11,0.5)";
-    ctx.lineWidth = 2;
-    visited.forEach((r, i) => {
-      const x = toX(r.lng), y = toY(r.lat);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // Visited markers (gold dots)
+  // Visited markers (gold, connected by path)
+  const visitedCoords = [];
   visited.forEach((r, i) => {
-    const x = toX(r.lng), y = toY(r.lat);
+    if (!r.lat || !r.lng) return;
+    visitedCoords.push([r.lat, r.lng]);
     const isLatest = i === visited.length - 1;
     const isFirst = i === 0;
-    const sz = isLatest ? 7 : 5;
-
-    // Glow
-    ctx.beginPath();
-    ctx.arc(x, y, sz + 4, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(184,134,11,0.15)";
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(x, y, sz, 0, Math.PI * 2);
-    ctx.fillStyle = "#b8860b";
-    ctx.fill();
-    ctx.strokeStyle = "#d4a017";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Number label
-    ctx.fillStyle = "#b8860b";
-    ctx.font = "12px 'VT323', monospace";
-    ctx.textAlign = "center";
-    ctx.fillText(i + 1, x, y - sz - 4);
-
+    const size = isLatest ? 16 : 12;
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="width:${size}px;height:${size}px;background:#b8860b;border:2px solid #d4a017;border-radius:50%;box-shadow:0 0 8px rgba(184,134,11,0.6);"></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
     const label = isFirst ? "The Quest Begins" : isLatest ? "You Are Here" : `Stop #${i + 1}`;
-    mapPoints.push({ x, y, r: sz + 4, name: r.name, info: `${label} · ${r.dates.length} visit${r.dates.length > 1 ? "s" : ""}`, dates: r.dates });
+    const datesHtml = r.dates.map(d => `<div class="map-popup-dates">${d}</div>`).join("");
+    L.marker([r.lat, r.lng], { icon })
+      .bindPopup(`<div class="map-popup-name">${r.name}</div><div class="map-popup-info">${label} · ${r.dates.length} visit${r.dates.length > 1 ? "s" : ""}</div>${datesHtml}`)
+      .addTo(map);
   });
 
-  // Hover handler
-  canvas.onmousemove = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    let hit = null;
-    for (let i = mapPoints.length - 1; i >= 0; i--) {
-      const p = mapPoints[i];
-      if (Math.hypot(mx - p.x, my - p.y) < p.r + 4) { hit = p; break; }
-    }
-    if (hit) {
-      tooltip.style.display = "block";
-      tooltip.style.left = (e.clientX + 14) + "px";
-      tooltip.style.top = (e.clientY - 10) + "px";
-      tooltip.innerHTML = `<div class="tt-name">${hit.name}</div><div class="tt-info">${hit.info}</div>${hit.dates.map(d => `<div class="tt-dates">${d}</div>`).join("")}`;
-    } else {
-      tooltip.style.display = "none";
-    }
-  };
-  canvas.onmouseleave = () => { tooltip.style.display = "none"; };
+  // Quest path line
+  if (visitedCoords.length > 1) {
+    L.polyline(visitedCoords, {
+      color: "#b8860b",
+      weight: 2,
+      opacity: 0.7,
+      dashArray: "8, 6"
+    }).addTo(map);
+  }
 }
 
 // ─── Tab Switching ───
