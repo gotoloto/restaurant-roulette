@@ -375,6 +375,56 @@
       color: var(--gold);
     }
 
+    /* Gallery */
+    .gallery-page { padding: 20px; max-width: 680px; margin: 0 auto; }
+    .gallery-page h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--highlight);
+      font-family: 'VT323', monospace;
+      font-size: 28px;
+      font-weight: normal;
+      letter-spacing: 3px;
+    }
+    .gallery-feed { display: flex; flex-direction: column; gap: 28px; }
+    .gallery-card {
+      border: 1px solid #333;
+      background: var(--surface);
+      padding: 0;
+      overflow: hidden;
+    }
+    .gallery-card img {
+      width: 100%;
+      display: block;
+    }
+    .gallery-card-info {
+      padding: 12px 16px;
+      border-top: 1px solid var(--gold);
+    }
+    .gallery-card-name {
+      color: var(--gold);
+      font-size: 24px;
+      font-family: 'UnifrakturMaguntia', serif;
+    }
+    .gallery-card-date {
+      color: var(--text-dim);
+      font-size: 16px;
+      margin-top: 4px;
+    }
+    .gallery-card-caption {
+      color: var(--text);
+      font-size: 18px;
+      margin-top: 6px;
+      font-style: italic;
+    }
+    .gallery-empty {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 22px;
+      padding: 60px 20px;
+      line-height: 1.6;
+    }
+
     .history-name {
       font-size: 20px;
       color: var(--text);
@@ -485,6 +535,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" data-tab="roulette">[ WHEEL ]</button>
   <button class="tab-btn" data-tab="history">[ LEDGER ]</button>
+  <button class="tab-btn" data-tab="gallery">[ GALLERY ]</button>
 </div>
 
 <div id="roulette" class="tab-content active">
@@ -521,6 +572,13 @@
       <button class="sort-btn" data-sort="recent">[MOST RECENT]</button>
     </div>
     <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<div id="gallery" class="tab-content">
+  <div class="gallery-page">
+    <h2>- - -  THE TAVERN CHRONICLES  - - -</h2>
+    <div class="gallery-feed" id="galleryFeed"></div>
   </div>
 </div>
 
@@ -991,6 +1049,29 @@ function renderHistory() {
   }).join("");
 }
 
+// ─── Gallery Data ───
+const galleryEntries = [
+  // { date: "2026-03-26", restaurant: "Example Restaurant", image: "images/2026-03-26-example.jpg", caption: "First visit!" }
+];
+
+function renderGallery() {
+  const feed = document.getElementById("galleryFeed");
+  if (galleryEntries.length === 0) {
+    feed.innerHTML = `<div class="gallery-empty">No tavern visits recorded yet.<br>Spin the wheel and feast!</div>`;
+    return;
+  }
+  feed.innerHTML = galleryEntries.map(e => `
+    <div class="gallery-card">
+      <img src="${e.image}" alt="${e.restaurant}" loading="lazy">
+      <div class="gallery-card-info">
+        <div class="gallery-card-name">${e.restaurant}</div>
+        <div class="gallery-card-date">${e.date}</div>
+        ${e.caption ? `<div class="gallery-card-caption">"${e.caption}"</div>` : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
 // ─── Tab Switching ───
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -999,6 +1080,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "history") renderHistory();
+    if (btn.dataset.tab === "gallery") renderGallery();
   });
 });
 
@@ -1023,7 +1105,7 @@ window.addEventListener("resize", () => {
 </script>
 
 <div style="text-align:center; padding:20px 10px 12px; color:#444; font-family:'VT323',monospace; font-size:14px;">
-  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.3
+  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.4
 </div>
 
 </body>
