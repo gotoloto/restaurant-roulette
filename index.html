@@ -6,6 +6,8 @@
   <title>Restaurant Roulette</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -519,6 +521,45 @@
     }
     .easter-img.show { opacity: 1; }
 
+    /* Quest Map */
+    .questmap-page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .questmap-page h2 {
+      text-align: center;
+      color: var(--gold);
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+    .questmap-stats {
+      text-align: center;
+      color: var(--gold);
+      font-size: 22px;
+      letter-spacing: 2px;
+    }
+    #questMap {
+      border-radius: 4px;
+    }
+    .leaflet-popup-content-wrapper {
+      background: #111 !important;
+      color: #c8c8c8 !important;
+      border: 1px solid #b8860b !important;
+      border-radius: 2px !important;
+      font-family: 'VT323', monospace !important;
+      font-size: 16px !important;
+    }
+    .leaflet-popup-tip { background: #111 !important; }
+    .leaflet-popup-content { margin: 10px 14px !important; }
+    .quest-popup-name { color: #b8860b; font-size: 20px; margin-bottom: 4px; }
+    .quest-popup-visited { color: #888; }
+    .quest-popup-dates { color: #aaa; font-size: 14px; }
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 4px #b8860b; }
+      50% { box-shadow: 0 0 16px #b8860b, 0 0 30px rgba(184,134,11,0.4); }
+    }
+
     /* Blinking cursor effect */
     @keyframes blink {
       0%, 50% { opacity: 1; }
@@ -540,6 +581,7 @@
   <button class="tab-btn active" data-tab="roulette">[ WHEEL ]</button>
   <button class="tab-btn" data-tab="history">[ LEDGER ]</button>
   <button class="tab-btn" data-tab="gallery">[ GALLERY ]</button>
+  <button class="tab-btn" data-tab="questmap">[ QUEST MAP ]</button>
 </div>
 
 <div id="roulette" class="tab-content active">
@@ -586,6 +628,14 @@
   </div>
 </div>
 
+<div id="questmap" class="tab-content">
+  <div class="questmap-page">
+    <h2>- - -  THE HERO'S JOURNEY  - - -</h2>
+    <div class="questmap-stats" id="questmapStats"></div>
+    <div id="questMap" style="width:100%; height:70vh; border:1px solid #333; margin-top:12px;"></div>
+  </div>
+</div>
+
 <!-- Easter Egg Overlay -->
 <div class="easter-overlay" id="easterOverlay">
   <div class="easter-dialogue" id="easterDialogue">What's going on??</div>
@@ -611,106 +661,106 @@
 <script>
 // ─── Restaurant Data ───
 const INITIAL_RESTAURANTS = [
-  { name: "Koja Kitchen", dates: [] },
-  { name: "Dish n Dash", dates: [] },
-  { name: "Halal Guys", dates: [] },
-  { name: "Mediterranean Kebab", dates: [] },
-  { name: "Ono Hawaiian BBQ", dates: ["2/13/26"] },
-  { name: "Anantara", dates: [] },
-  { name: "Blaze Pizza", dates: [] },
-  { name: "Bundoo Khan", dates: [] },
-  { name: "In-N-Out", dates: ["12/5/25", "3/20/26"] },
-  { name: "Gen Korean BBQ", dates: ["1/5/26"] },
-  { name: "Panda Express", dates: [] },
-  { name: "Costco", dates: [] },
-  { name: "Firehouse Subs", dates: [] },
-  { name: "Five Guys", dates: [] },
-  { name: "Haidilao Hot Pot", dates: [] },
-  { name: "Market Broiler", dates: ["1/30/26"] },
-  { name: "Hiro Nori Ramen", dates: [] },
-  { name: "Panera Bread", dates: [] },
-  { name: "Pho Ha Noi", dates: [] },
-  { name: "Red Hot Chili Pepper", dates: ["1/16/26"] },
-  { name: "Sake2Me", dates: [] },
-  { name: "Habit Burger", dates: [] },
-  { name: "The Kebab Shop", dates: ["2/20/26"] },
-  { name: "Wingstop", dates: ["3/6/26"] },
-  { name: "Zhang Fei Hot Pot", dates: [] },
-  { name: "Korean Bob Sang", dates: [] },
-  { name: "McDonald's", dates: [] },
-  { name: "Zingsters", dates: [] },
-  { name: "Teo Chow Noodle Shack", dates: ["12/12/25"] },
-  { name: "Falaknuma Indian", dates: [] },
-  { name: "Wendy's", dates: ["1/6/26"] },
-  { name: "Sunfish Poke", dates: [] },
-  { name: "Westcoast Sourdough", dates: [] },
-  { name: "Chipotle", dates: [] },
-  { name: "Chick-Fil-A", dates: [] },
-  { name: "Pearl Bay", dates: [] },
-  { name: "Shang Cafe", dates: [] },
-  { name: "Local Cafe", dates: [] },
-  { name: "ABC Chicken", dates: ["2/27/26"] },
-  { name: "Steaking", dates: [] },
-  { name: "Cafe Mei", dates: [] },
-  { name: "General Pot", dates: [] },
-  { name: "Toro Sushi", dates: [] },
-  { name: "Xifu Hot Pot", dates: [] },
-  { name: "Slice House", dates: [] },
-  { name: "Subway", dates: [] },
-  { name: "Habibiz", dates: [] },
-  { name: "Pizza Hut Express", dates: [] },
-  { name: "Tacos Chidos Taqueria", dates: [] },
-  { name: "Falafel Fremont", dates: [] },
-  { name: "SOHO Modern Japanese", dates: [] },
-  { name: "Congee King", dates: [] },
-  { name: "iTea Fremont", dates: [] },
-  { name: "Isla Restaurant", dates: [] },
-  { name: "HalalSteet Hot Pot", dates: [] },
-  { name: "Fu Lam Moon Restaurant", dates: [] },
-  { name: "HUNGRY-COW K BBQ", dates: [] },
-  { name: "Sizzling Lunch", dates: [] },
-  { name: "Tapioca Express", dates: [] },
-  { name: "House of Currys", dates: [] },
-  { name: "Kabob Fusion", dates: [] },
-  { name: "Dope Pho", dates: [] },
-  { name: "Quiznos", dates: [] },
-  { name: "Straw Hat Pizza", dates: [] },
-  { name: "Jack in the Box", dates: [] },
-  { name: "Tacos La Lomita", dates: [] },
-  { name: "TOGO's", dates: [] },
-  { name: "MJ Sushi", dates: [] },
-  { name: "Old Street Chengpan Malatang", dates: [] },
-  { name: "Northwest China Cuisine", dates: [] },
-  { name: "Soo Ja Fusion Bistro", dates: [] },
-  { name: "Special Noodle", dates: [] },
-  { name: "Shanghai Delight", dates: [] },
-  { name: "World Gourmet Buffet Restaurant", dates: [] },
-  { name: "Eggholic - Indian Street Food", dates: [] },
-  { name: "Hyderabad Dum Biryani", dates: [] },
-  { name: "Kakuna Sushi", dates: [] },
-  { name: "Always Cool BBQ", dates: [] },
-  { name: "Taqueria Las Vegas & Bar", dates: [] },
-  { name: "Eli's Sports Bar & Lounge", dates: [] },
-  { name: "Guanatos Tacos", dates: [] },
-  { name: "786 Kabob House Newark", dates: [] },
-  { name: "Chandni Restaurant", dates: [] },
-  { name: "Saint Pita", dates: [] },
-  { name: "Tacos El Kiko", dates: [] },
-  { name: "Full House Dumpling", dates: [] },
-  { name: "Monasaba Cafe", dates: [] },
-  { name: "i Pizza", dates: ["3/13/26"] },
-  { name: "Soo Ja Seolleongtang", dates: [] },
-  { name: "Vince's Cafe", dates: [] },
-  { name: "Domino's Pizza", dates: [] },
-  { name: "Line Thai", dates: [] },
-  { name: "Deccan Morsels", dates: [] },
-  { name: "Karikku Cafe", dates: [] },
-  { name: "Poke House - Warm Springs", dates: [] },
-  { name: "Amazing Basil & A Cup Of", dates: [] },
-  { name: "Boiling Point", dates: [] },
-  { name: "Mom's Tofu House", dates: [] },
-  { name: "Roll n Crust", dates: [] },
-  { name: "Gourmet House", dates: [] }
+  { name: "Koja Kitchen", dates: [], lat: 37.4961, lng: -121.9263 },
+  { name: "Dish n Dash", dates: [], lat: 37.4977, lng: -121.9306 },
+  { name: "Halal Guys", dates: [], lat: 37.4935, lng: -121.9370 },
+  { name: "Mediterranean Kebab", dates: [], lat: 37.5485, lng: -121.9886 },
+  { name: "Ono Hawaiian BBQ", dates: ["2/13/26"], lat: 37.4958, lng: -121.9270 },
+  { name: "Anantara", dates: [], lat: 37.4963, lng: -121.9260 },
+  { name: "Blaze Pizza", dates: [], lat: 37.4957, lng: -121.9272 },
+  { name: "Bundoo Khan", dates: [], lat: 37.4975, lng: -121.9310 },
+  { name: "In-N-Out", dates: ["12/5/25", "3/20/26"], lat: 37.4942, lng: -121.9280 },
+  { name: "Gen Korean BBQ", dates: ["1/5/26"], lat: 37.4955, lng: -121.9295 },
+  { name: "Panda Express", dates: [], lat: 37.4948, lng: -121.9300 },
+  { name: "Costco", dates: [], lat: 37.4945, lng: -121.9320 },
+  { name: "Firehouse Subs", dates: [], lat: 37.4947, lng: -121.9305 },
+  { name: "Five Guys", dates: [], lat: 37.4972, lng: -121.9312 },
+  { name: "Haidilao Hot Pot", dates: [], lat: 37.4952, lng: -121.9298 },
+  { name: "Market Broiler", dates: ["1/30/26"], lat: 37.4976, lng: -121.9315 },
+  { name: "Hiro Nori Ramen", dates: [], lat: 37.4960, lng: -121.9280 },
+  { name: "Panera Bread", dates: [], lat: 37.4970, lng: -121.9308 },
+  { name: "Pho Ha Noi", dates: [], lat: 37.4968, lng: -121.9318 },
+  { name: "Red Hot Chili Pepper", dates: ["1/16/26"], lat: 37.4950, lng: -121.9292 },
+  { name: "Sake2Me", dates: [], lat: 37.4966, lng: -121.9320 },
+  { name: "Habit Burger", dates: [], lat: 37.4959, lng: -121.9268 },
+  { name: "The Kebab Shop", dates: ["2/20/26"], lat: 37.4960, lng: -121.9265 },
+  { name: "Wingstop", dates: ["3/6/26"], lat: 37.4946, lng: -121.9302 },
+  { name: "Zhang Fei Hot Pot", dates: [], lat: 37.4964, lng: -121.9258 },
+  { name: "Korean Bob Sang", dates: [], lat: 37.5025, lng: -121.9380 },
+  { name: "McDonald's", dates: [], lat: 37.5020, lng: -121.9390 },
+  { name: "Zingsters", dates: [], lat: 37.5023, lng: -121.9375 },
+  { name: "Teo Chow Noodle Shack", dates: ["12/12/25"], lat: 37.5022, lng: -121.9378 },
+  { name: "Falaknuma Indian", dates: [], lat: 37.5021, lng: -121.9380 },
+  { name: "Wendy's", dates: ["1/6/26"], lat: 37.5055, lng: -121.9710 },
+  { name: "Sunfish Poke", dates: [], lat: 37.5058, lng: -121.9620 },
+  { name: "Westcoast Sourdough", dates: [], lat: 37.5060, lng: -121.9610 },
+  { name: "Chipotle", dates: [], lat: 37.5055, lng: -121.9615 },
+  { name: "Chick-Fil-A", dates: [], lat: 37.5053, lng: -121.9620 },
+  { name: "Pearl Bay", dates: [], lat: 37.4970, lng: -121.9275 },
+  { name: "Shang Cafe", dates: [], lat: 37.4965, lng: -121.9282 },
+  { name: "Local Cafe", dates: [], lat: 37.4968, lng: -121.9278 },
+  { name: "ABC Chicken", dates: ["2/27/26"], lat: 37.4962, lng: -121.9285 },
+  { name: "Steaking", dates: [], lat: 37.4963, lng: -121.9280 },
+  { name: "Cafe Mei", dates: [], lat: 37.4964, lng: -121.9278 },
+  { name: "General Pot", dates: [], lat: 37.4966, lng: -121.9276 },
+  { name: "Toro Sushi", dates: [], lat: 37.4967, lng: -121.9273 },
+  { name: "Xifu Hot Pot", dates: [], lat: 37.4968, lng: -121.9270 },
+  { name: "Slice House", dates: [], lat: 37.4949, lng: -121.9300 },
+  { name: "Subway", dates: [], lat: 37.5040, lng: -121.9500 },
+  { name: "Habibiz", dates: [], lat: 37.5130, lng: -121.9610 },
+  { name: "Pizza Hut Express", dates: [], lat: 37.4940, lng: -121.9250 },
+  { name: "Tacos Chidos Taqueria", dates: [], lat: 37.5062, lng: -121.9605 },
+  { name: "Falafel Fremont", dates: [], lat: 37.4980, lng: -121.9430 },
+  { name: "SOHO Modern Japanese", dates: [], lat: 37.5090, lng: -121.9520 },
+  { name: "Congee King", dates: [], lat: 37.4964, lng: -121.9279 },
+  { name: "iTea Fremont", dates: [], lat: 37.4969, lng: -121.9310 },
+  { name: "Isla Restaurant", dates: [], lat: 37.5250, lng: -122.0050 },
+  { name: "HalalSteet Hot Pot", dates: [], lat: 37.5240, lng: -122.0060 },
+  { name: "Fu Lam Moon Restaurant", dates: [], lat: 37.5088, lng: -121.9525 },
+  { name: "HUNGRY-COW K BBQ", dates: [], lat: 37.5085, lng: -121.9530 },
+  { name: "Sizzling Lunch", dates: [], lat: 37.5087, lng: -121.9528 },
+  { name: "Tapioca Express", dates: [], lat: 37.5070, lng: -121.9660 },
+  { name: "House of Currys", dates: [], lat: 37.5068, lng: -121.9665 },
+  { name: "Kabob Fusion", dates: [], lat: 37.5120, lng: -121.9740 },
+  { name: "Dope Pho", dates: [], lat: 37.4982, lng: -121.9435 },
+  { name: "Quiznos", dates: [], lat: 37.4935, lng: -121.9240 },
+  { name: "Straw Hat Pizza", dates: [], lat: 37.4932, lng: -121.9238 },
+  { name: "Jack in the Box", dates: [], lat: 37.4870, lng: -121.9540 },
+  { name: "Tacos La Lomita", dates: [], lat: 37.5150, lng: -121.9750 },
+  { name: "TOGO's", dates: [], lat: 37.4933, lng: -121.9242 },
+  { name: "MJ Sushi", dates: [], lat: 37.5170, lng: -121.9440 },
+  { name: "Old Street Chengpan Malatang", dates: [], lat: 37.5175, lng: -121.9435 },
+  { name: "Northwest China Cuisine", dates: [], lat: 37.5178, lng: -121.9430 },
+  { name: "Soo Ja Fusion Bistro", dates: [], lat: 37.5172, lng: -121.9445 },
+  { name: "Special Noodle", dates: [], lat: 37.5168, lng: -121.9450 },
+  { name: "Shanghai Delight", dates: [], lat: 37.5170, lng: -121.9448 },
+  { name: "World Gourmet Buffet Restaurant", dates: [], lat: 37.5169, lng: -121.9442 },
+  { name: "Eggholic - Indian Street Food", dates: [], lat: 37.5238, lng: -122.0055 },
+  { name: "Hyderabad Dum Biryani", dates: [], lat: 37.5100, lng: -121.9720 },
+  { name: "Kakuna Sushi", dates: [], lat: 37.4985, lng: -121.9440 },
+  { name: "Always Cool BBQ", dates: [], lat: 37.5167, lng: -121.9452 },
+  { name: "Taqueria Las Vegas & Bar", dates: [], lat: 37.5180, lng: -121.9650 },
+  { name: "Eli's Sports Bar & Lounge", dates: [], lat: 37.5098, lng: -121.9722 },
+  { name: "Guanatos Tacos", dates: [], lat: 37.4990, lng: -121.9410 },
+  { name: "786 Kabob House Newark", dates: [], lat: 37.5300, lng: -122.0280 },
+  { name: "Chandni Restaurant", dates: [], lat: 37.5075, lng: -121.9680 },
+  { name: "Saint Pita", dates: [], lat: 37.5118, lng: -121.9742 },
+  { name: "Tacos El Kiko", dates: [], lat: 37.5095, lng: -121.9725 },
+  { name: "Full House Dumpling", dates: [], lat: 37.5176, lng: -121.9432 },
+  { name: "Monasaba Cafe", dates: [], lat: 37.5110, lng: -121.9700 },
+  { name: "i Pizza", dates: ["3/13/26"], lat: 37.5340, lng: -122.0320 },
+  { name: "Soo Ja Seolleongtang", dates: [], lat: 37.5171, lng: -121.9446 },
+  { name: "Vince's Cafe", dates: [], lat: 37.5160, lng: -121.9630 },
+  { name: "Domino's Pizza", dates: [], lat: 37.5042, lng: -121.9505 },
+  { name: "Line Thai", dates: [], lat: 37.5290, lng: -121.9590 },
+  { name: "Deccan Morsels", dates: [], lat: 37.5072, lng: -121.9685 },
+  { name: "Karikku Cafe", dates: [], lat: 37.4850, lng: -121.9430 },
+  { name: "Poke House - Warm Springs", dates: [], lat: 37.4842, lng: -121.9425 },
+  { name: "Amazing Basil & A Cup Of", dates: [], lat: 37.4845, lng: -121.9420 },
+  { name: "Boiling Point", dates: [], lat: 37.4843, lng: -121.9422 },
+  { name: "Mom's Tofu House", dates: [], lat: 37.4840, lng: -121.9418 },
+  { name: "Roll n Crust", dates: [], lat: 37.5200, lng: -121.9550 },
+  { name: "Gourmet House", dates: [], lat: 37.4838, lng: -121.9415 }
 ];
 
 // ─── State (hardcoded — update via git push) ───
@@ -1076,6 +1126,95 @@ function renderGallery() {
   `).join("");
 }
 
+// ─── Quest Map ───
+let questMapInited = false;
+let questMapInstance = null;
+
+function renderQuestMap() {
+  const visited = restaurants.filter(r => r.dates.length > 0)
+    .sort((a, b) => {
+      const da = new Date(a.dates[0]);
+      const db = new Date(b.dates[0]);
+      return da - db;
+    });
+
+  const statsEl = document.getElementById("questmapStats");
+  statsEl.textContent = `Taverns Conquered: ${visited.length} / ${restaurants.length}`;
+
+  if (questMapInited) {
+    questMapInstance.invalidateSize();
+    return;
+  }
+  questMapInited = true;
+
+  const map = L.map("questMap", { zoomControl: true }).setView([37.505, -121.965], 13);
+  questMapInstance = map;
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19
+  }).addTo(map);
+
+  // Home base marker
+  const homeIcon = L.divIcon({
+    className: "",
+    html: '<div style="width:14px;height:14px;background:#fff;border:2px solid #b8860b;border-radius:50%;box-shadow:0 0 8px rgba(184,134,11,0.6);"></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+  L.marker([37.5043, -121.9620], { icon: homeIcon })
+    .bindPopup('<div class="quest-popup-name">Home Base</div><div class="quest-popup-visited">44370 Christy St</div>')
+    .addTo(map);
+
+  // Unvisited markers (dim grey dots)
+  const unvisitedIcon = L.divIcon({
+    className: "",
+    html: '<div style="width:6px;height:6px;background:#444;border-radius:50%;"></div>',
+    iconSize: [6, 6],
+    iconAnchor: [3, 3]
+  });
+  restaurants.filter(r => r.dates.length === 0).forEach(r => {
+    if (r.lat && r.lng) {
+      L.marker([r.lat, r.lng], { icon: unvisitedIcon })
+        .bindPopup(`<div class="quest-popup-name">${r.name}</div><div class="quest-popup-visited" style="color:#666;">Uncharted territory</div>`)
+        .addTo(map);
+    }
+  });
+
+  // Visited markers (gold, connected by quest path)
+  const visitedCoords = [];
+  visited.forEach((r, i) => {
+    if (!r.lat || !r.lng) return;
+    visitedCoords.push([r.lat, r.lng]);
+    const isLatest = i === visited.length - 1;
+    const isFirst = i === 0;
+    const glow = isLatest ? "animation:pulse-gold 2s infinite;" : "";
+    const size = isLatest ? 16 : 12;
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="width:${size}px;height:${size}px;background:#b8860b;border:2px solid #d4a017;border-radius:50%;box-shadow:0 0 8px rgba(184,134,11,0.6);${glow}"></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
+    const label = isFirst ? "The Quest Begins" : isLatest ? "You Are Here" : `Stop #${i + 1}`;
+    const datesHtml = r.dates.map(d => `<div class="quest-popup-dates">${d}</div>`).join("");
+    L.marker([r.lat, r.lng], { icon })
+      .bindPopup(`<div class="quest-popup-name">${r.name}</div><div class="quest-popup-visited">${label} · ${r.dates.length} visit${r.dates.length > 1 ? "s" : ""}</div>${datesHtml}`)
+      .addTo(map);
+  });
+
+  // Quest path line
+  if (visitedCoords.length > 1) {
+    L.polyline(visitedCoords, {
+      color: "#b8860b",
+      weight: 2,
+      opacity: 0.7,
+      dashArray: "8, 6"
+    }).addTo(map);
+  }
+}
+
 // ─── Tab Switching ───
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -1085,6 +1224,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "history") renderHistory();
     if (btn.dataset.tab === "gallery") renderGallery();
+    if (btn.dataset.tab === "questmap") setTimeout(() => renderQuestMap(), 100);
   });
 });
 
@@ -1109,7 +1249,7 @@ window.addEventListener("resize", () => {
 </script>
 
 <div style="text-align:center; padding:20px 10px 12px; color:#444; font-family:'VT323',monospace; font-size:14px;">
-  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.7
+  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.8
 </div>
 
 </body>
