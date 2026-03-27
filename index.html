@@ -1144,7 +1144,11 @@ function renderQuestMap() {
   const map = L.map("questMap", { zoomControl: true }).setView([37.505, -121.965], 13);
   questMapInstance = map;
 
-  // No tile layer — blank black background via CSS
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19
+  }).addTo(map);
 
   // Home base marker
   const homeIcon = L.divIcon({
