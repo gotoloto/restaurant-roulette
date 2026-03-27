@@ -6,8 +6,6 @@
   <title>Restaurant Roulette</title>
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -522,41 +520,6 @@
     .easter-img.show { opacity: 1; }
 
     /* Quest Map */
-    .questmap-page {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .questmap-page h2 {
-      text-align: center;
-      color: var(--gold);
-      letter-spacing: 4px;
-      margin-bottom: 8px;
-    }
-    .questmap-stats {
-      text-align: center;
-      color: var(--gold);
-      font-size: 22px;
-      letter-spacing: 2px;
-    }
-    #questMap {
-      border-radius: 4px;
-      background: #0a0a0a;
-    }
-    .leaflet-container { background: #0a0a0a !important; }
-    .leaflet-popup-content-wrapper {
-      background: #111 !important;
-      color: #c8c8c8 !important;
-      border: 1px solid #b8860b !important;
-      border-radius: 2px !important;
-      font-family: 'VT323', monospace !important;
-      font-size: 16px !important;
-    }
-    .leaflet-popup-tip { background: #111 !important; }
-    .leaflet-popup-content { margin: 10px 14px !important; }
-    .map-popup-name { color: #b8860b; font-size: 20px; margin-bottom: 4px; }
-    .map-popup-info { color: #888; }
-    .map-popup-dates { color: #aaa; font-size: 14px; }
 
     /* Blinking cursor effect */
     @keyframes blink {
@@ -579,7 +542,6 @@
   <button class="tab-btn active" data-tab="roulette">[ WHEEL ]</button>
   <button class="tab-btn" data-tab="history">[ LEDGER ]</button>
   <button class="tab-btn" data-tab="gallery">[ GALLERY ]</button>
-  <button class="tab-btn" data-tab="questmap">[ MAP ]</button>
 </div>
 
 <div id="roulette" class="tab-content active">
@@ -626,13 +588,6 @@
   </div>
 </div>
 
-<div id="questmap" class="tab-content">
-  <div class="questmap-page">
-    <h2>- - -  THE HERO'S JOURNEY  - - -</h2>
-    <div class="questmap-stats" id="questmapStats"></div>
-    <div id="questMap" style="width:100%; height:70vh; border:1px solid #333; margin-top:12px;"></div>
-  </div>
-</div>
 
 <!-- Easter Egg Overlay -->
 <div class="easter-overlay" id="easterOverlay">
@@ -1124,79 +1079,6 @@ function renderGallery() {
   `).join("");
 }
 
-// ─── Map ───
-let questMapInited = false;
-let questMapInstance = null;
-
-function renderQuestMap() {
-  const visited = restaurants.filter(r => r.dates.length > 0)
-    .sort((a, b) => new Date(a.dates[0]) - new Date(b.dates[0]));
-
-  document.getElementById("questmapStats").textContent =
-    `Taverns Conquered: ${visited.length} / ${restaurants.length}`;
-
-  if (questMapInited) {
-    questMapInstance.invalidateSize();
-    return;
-  }
-  questMapInited = true;
-
-  const map = L.map("questMap", { zoomControl: true }).setView([37.505, -121.965], 13);
-  questMapInstance = map;
-
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains: "abcd",
-    maxZoom: 19
-  }).addTo(map);
-
-  // Home base marker
-  const homeIcon = L.divIcon({
-    className: "",
-    html: '<div style="width:14px;height:14px;background:#fff;border:2px solid #b8860b;border-radius:50%;box-shadow:0 0 8px rgba(184,134,11,0.6);"></div>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
-  });
-  L.marker([37.49959, -121.96101], { icon: homeIcon })
-    .bindPopup('<div class="map-popup-name">Home Base</div><div class="map-popup-info">44370 Christy St</div>')
-    .addTo(map);
-
-  // Unvisited markers (dim grey dots)
-  const unvisitedIcon = L.divIcon({
-    className: "",
-    html: '<div style="width:6px;height:6px;background:#333;border-radius:50%;"></div>',
-    iconSize: [6, 6],
-    iconAnchor: [3, 3]
-  });
-  restaurants.filter(r => r.dates.length === 0 && r.lat && r.lng).forEach(r => {
-    L.marker([r.lat, r.lng], { icon: unvisitedIcon })
-      .bindPopup(`<div class="map-popup-name">${r.name}</div><div class="map-popup-info" style="color:#666;">Uncharted territory</div>`)
-      .addTo(map);
-  });
-
-  // Visited markers (gold, connected by path)
-  const visitedCoords = [];
-  visited.forEach((r, i) => {
-    if (!r.lat || !r.lng) return;
-    visitedCoords.push([r.lat, r.lng]);
-    const isLatest = i === visited.length - 1;
-    const isFirst = i === 0;
-    const size = isLatest ? 16 : 12;
-    const icon = L.divIcon({
-      className: "",
-      html: `<div style="width:${size}px;height:${size}px;background:#b8860b;border:2px solid #d4a017;border-radius:50%;box-shadow:0 0 8px rgba(184,134,11,0.6);"></div>`,
-      iconSize: [size, size],
-      iconAnchor: [size/2, size/2]
-    });
-    const label = isFirst ? "The Quest Begins" : isLatest ? "You Are Here" : `Stop #${i + 1}`;
-    const datesHtml = r.dates.map(d => `<div class="map-popup-dates">${d}</div>`).join("");
-    L.marker([r.lat, r.lng], { icon })
-      .bindPopup(`<div class="map-popup-name">${r.name}</div><div class="map-popup-info">${label} · ${r.dates.length} visit${r.dates.length > 1 ? "s" : ""}</div>${datesHtml}`)
-      .addTo(map);
-  });
-
-}
-
 // ─── Tab Switching ───
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -1206,7 +1088,6 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "history") renderHistory();
     if (btn.dataset.tab === "gallery") renderGallery();
-    if (btn.dataset.tab === "questmap") setTimeout(() => renderQuestMap(), 100);
   });
 });
 
