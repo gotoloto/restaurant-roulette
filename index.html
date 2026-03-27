@@ -1195,15 +1195,6 @@ function renderQuestMap() {
       .addTo(map);
   });
 
-  // Quest path line
-  if (visitedCoords.length > 1) {
-    L.polyline(visitedCoords, {
-      color: "#b8860b",
-      weight: 2,
-      opacity: 0.7,
-      dashArray: "8, 6"
-    }).addTo(map);
-  }
 }
 
 // ─── Tab Switching ───
