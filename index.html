@@ -31,6 +31,10 @@
     }
     a, button, .tab-btn, [onclick] {
       cursor: inherit !important;
+      transition: text-shadow 0.2s, filter 0.2s;
+    }
+    a:hover, button:hover, .tab-btn:hover, [onclick]:hover {
+      text-shadow: 0 0 8px rgba(184,134,11,0.6), 0 0 20px rgba(184,134,11,0.3);
     }
 
     /* CRT scanline effect */
@@ -1105,7 +1109,7 @@ window.addEventListener("resize", () => {
 </script>
 
 <div style="text-align:center; padding:20px 10px 12px; color:#444; font-family:'VT323',monospace; font-size:14px;">
-  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.6
+  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.7
 </div>
 
 </body>
