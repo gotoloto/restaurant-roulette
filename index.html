@@ -675,7 +675,7 @@ const INITIAL_RESTAURANTS = [
   { name: "Tapioca Express", dates: [], lat: 37.522852, lng: -121.971664 },
   { name: "House of Currys", dates: [], lat: 37.522852, lng: -121.971664 },
   { name: "Kabob Fusion", dates: [], lat: 37.524255, lng: -121.957523 },
-  { name: "Dope Pho", dates: [], lat: 37.512125, lng: -121.964598 },
+  { name: "Dope Pho", dates: ["2026-04-03"], lat: 37.512125, lng: -121.964598 },
   { name: "Quiznos", dates: [], lat: 37.532810, lng: -121.957308 },
   { name: "Straw Hat Pizza", dates: [], lat: 37.532810, lng: -121.957308 },
   { name: "Jack in the Box", dates: [], lat: 37.505511, lng: -121.969388 },
@@ -1058,6 +1058,7 @@ function renderHistory() {
 
 // ─── Gallery Data ───
 const galleryEntries = [
+  { date: "4/3/26", restaurant: "Dope Pho", image: "images/2026-04-03-dope-pho.jpg", caption: "" },
   { date: "3/27/26", restaurant: "Hyderabad Dum Biryani", image: "images/2026-03-27-hyderabad-dum-biryani.jpg", caption: "" },
   { date: "3/13/26", restaurant: "i Pizza", image: "images/2026-03-13-ipizza.jpg", caption: "" }
 ];
@@ -1113,7 +1114,7 @@ window.addEventListener("resize", () => {
 </script>
 
 <div style="text-align:center; padding:20px 10px 12px; color:#444; font-family:'VT323',monospace; font-size:14px;">
-  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v1.9
+  Knight art by <a href="https://moopseal.newgrounds.com/" style="color:#666; text-decoration:none;">MoopSeal</a> · v2.0
 </div>
 
 </body>
