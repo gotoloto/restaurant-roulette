@@ -549,7 +549,7 @@
     <div class="gothic-header">
       <span class="gothic-title">ℜ𝔢𝔰𝔱𝔞𝔲𝔯𝔞𝔫𝔱</span>
       <span class="gothic-title">ℜ𝔬𝔲𝔩𝔢𝔱𝔱𝔢</span>
-      <span class="gothic-title" style="font-size:20px; color:#666;">(Easter Egg Mode)</span>
+
     </div>
     <p class="subtitle cursor-blink">Ye stand before the Wheel of Fate. 100 taverns await</p>
 
@@ -868,8 +868,8 @@ function spin() {
   spinning = true;
   document.getElementById("spinBtn").disabled = true;
 
-  // Easter egg: temporarily 1 in 2 for demo, change back to 1/101
-  if (Math.random() < 1/2) {
+  // Easter egg: 1 in 101 chance — the hidden 101st entry
+  if (Math.random() < 1/101) {
     triggerEasterEgg();
     return;
   }
