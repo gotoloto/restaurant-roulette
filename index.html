@@ -628,7 +628,7 @@ const INITIAL_RESTAURANTS = [
   { name: "Panda Express", dates: [], lat: 37.503173, lng: -121.975593 },
   { name: "Costco", dates: [], lat: 37.503412, lng: -121.972765 },
   { name: "Firehouse Subs", dates: [], lat: 37.503409, lng: -121.975788 },
-  { name: "Five Guys", dates: [], lat: 37.504263, lng: -121.969357 },
+  { name: "Five Guys", dates: ["4/24/26"], lat: 37.504263, lng: -121.969357 },
   { name: "Haidilao Hot Pot", dates: [], lat: 37.502276, lng: -121.975019 },
   { name: "Market Broiler", dates: ["1/30/26"], lat: 37.504967, lng: -121.970234 },
   { name: "Hiro Nori Ramen", dates: [], lat: 37.501058, lng: -121.973565 },
@@ -1059,6 +1059,7 @@ function renderHistory() {
 
 // ─── Gallery Data ───
 const galleryEntries = [
+  { date: "4/24/26", restaurant: "Five Guys", image: "images/2026-04-24-five-guys.jpg", caption: "" },
   { date: "4/17/26", restaurant: "Soo Ja Seolleongtang", image: "images/2026-04-17-soo-ja-seolleongtang.jpg", caption: "" },
   { date: "4/10/26", restaurant: "Sizzling Lunch", image: "images/2026-04-10-sizzling-lunch.jpg", caption: "" },
   { date: "4/3/26", restaurant: "Dope Pho", image: "images/2026-04-03-dope-pho.jpg", caption: "" },
