@@ -636,7 +636,7 @@ const INITIAL_RESTAURANTS = [
   { name: "Panera Bread", dates: ["9/11/26"], lat: 37.505511, lng: -121.970964 },
   { name: "Pho Ha Noi", dates: [], lat: 37.505511, lng: -121.970964 },
   { name: "Red Hot Chili Pepper", dates: ["1/16/26", "7/17/26"], lat: 37.502706, lng: -121.975380 },
-  { name: "Sake2Me", dates: [], lat: 37.505511, lng: -121.969388 },
+  { name: "Sake2Me", dates: ["10/16/26"], lat: 37.505511, lng: -121.969388 },
   { name: "Habit Burger", dates: [], lat: 37.501812, lng: -121.970372 },
   { name: "The Kebab Shop", dates: ["2/20/26"], lat: 37.501781, lng: -121.970329 },
   { name: "Wingstop", dates: ["3/6/26"], lat: 37.502794, lng: -121.975280 },
@@ -652,7 +652,7 @@ const INITIAL_RESTAURANTS = [
   { name: "Chipotle", dates: [], lat: 37.504883, lng: -121.973885 },
   { name: "Chick-Fil-A", dates: ["6/12/26"], lat: 37.505039, lng: -121.973497 },
   { name: "Pearl Bay", dates: [], lat: 37.501441, lng: -121.974078 },
-  { name: "Shang Cafe", dates: [], lat: 37.501138, lng: -121.973672 },
+  { name: "Chuan Kitchen", dates: [], lat: 37.501138, lng: -121.973672 },
   { name: "Local Bistro", dates: ["7/10/26"], lat: 37.501314, lng: -121.973907 },
   { name: "ABC Chicken", dates: ["2/27/26", "9/4/26"], lat: 37.501202, lng: -121.973758 },
   { name: "Steaking", dates: [], lat: 37.501122, lng: -121.973651 },
@@ -676,7 +676,7 @@ const INITIAL_RESTAURANTS = [
   { name: "Sizzling Lunch", dates: ["4/10/26"], lat: 37.519691, lng: -121.987878 },
   { name: "Tapioca Express", dates: [], lat: 37.522852, lng: -121.971664 },
   { name: "House of Currys", dates: [], lat: 37.522852, lng: -121.971664 },
-  { name: "Kabob Fusion", dates: [], lat: 37.524255, lng: -121.957523 },
+  { name: "Kabob Fusion", dates: ["9/18/26"], lat: 37.524255, lng: -121.957523 },
   { name: "Dope Pho", dates: ["4/3/26"], lat: 37.512125, lng: -121.964598 },
   { name: "Quiznos", dates: [], lat: 37.532810, lng: -121.957308 },
   { name: "Straw Hat Pizza", dates: [], lat: 37.532810, lng: -121.957308 },
@@ -704,7 +704,7 @@ const INITIAL_RESTAURANTS = [
   { name: "Full House Dumpling", dates: ["7/31/26"], lat: 37.518327, lng: -121.991008 },
   { name: "Monasaba Cafe", dates: [], lat: 37.505182, lng: -121.973140 },
   { name: "i Pizza", dates: ["3/13/26"], lat: 37.518537, lng: -121.991916 },
-  { name: "Soo Ja Seolleongtang", dates: ["4/17/26"], lat: 37.519199, lng: -121.990345 },
+  { name: "Soo Ja Seolleongtang", dates: ["4/17/26", "10/9/26"], lat: 37.519199, lng: -121.990345 },
   { name: "Vince's Cafe", dates: [], lat: 37.481062, lng: -121.945123 },
   { name: "Domino's Pizza", dates: [], lat: 37.534251, lng: -121.967087 },
   { name: "Line Thai", dates: [], lat: 37.532595, lng: -121.958193 },
@@ -713,13 +713,20 @@ const INITIAL_RESTAURANTS = [
   { name: "Poke House - Warm Springs", dates: [], lat: 37.488930, lng: -121.929134 },
   { name: "Amazing Basil & A Cup Of", dates: [], lat: 37.488762, lng: -121.929038 },
   { name: "Boiling Point", dates: ["6/26/26"], lat: 37.488954, lng: -121.929147 },
-  { name: "Mom's Tofu House", dates: [], lat: 37.488666, lng: -121.928983 },
+  { name: "Mom's Tofu House", dates: ["9/25/26"], lat: 37.488666, lng: -121.928983 },
   { name: "Roll n Crust", dates: [], lat: 37.491935, lng: -121.926695 },
   { name: "Gourmet House", dates: [], lat: 37.488551, lng: -121.928917 }
 ];
 
 // ─── State (hardcoded — update via git push) ───
 let restaurants = INITIAL_RESTAURANTS;
+
+// Visits whose tavern is lost to memory — shown in the ledger as ???
+// (not part of the wheel or the tavern counts; move the date to the
+// right restaurant above once someone remembers)
+const MYSTERY_VISITS = [
+  { name: "???", dates: ["10/2/26"] }
+];
 
 // ─── Wheel Colors — muted, old-world palette ───
 const COLORS = [
@@ -1062,7 +1069,8 @@ let currentSort = "alpha-asc";
 
 function renderHistory() {
   const visited = restaurants.filter(r => r.dates.length > 0);
-  const totalVisits = restaurants.reduce((s, r) => s + r.dates.length, 0);
+  const totalVisits = restaurants.reduce((s, r) => s + r.dates.length, 0)
+    + MYSTERY_VISITS.reduce((s, m) => s + m.dates.length, 0);
   document.getElementById("statsBar").innerHTML = `
     <div class="stat-card"><div class="stat-number">${restaurants.length}</div><div class="stat-label">TAVERNS</div></div>
     <div class="stat-card"><div class="stat-number">${visited.length}</div><div class="stat-label">CONQUERED</div></div>
@@ -1070,7 +1078,7 @@ function renderHistory() {
     <div class="stat-card"><div class="stat-number">${totalVisits}</div><div class="stat-label">QUESTS</div></div>
   `;
 
-  const sorted = [...restaurants];
+  const sorted = [...restaurants, ...MYSTERY_VISITS];
   switch (currentSort) {
     case "alpha-asc": sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
     case "alpha-desc": sorted.sort((a, b) => b.name.localeCompare(a.name)); break;
@@ -1103,6 +1111,8 @@ function renderHistory() {
 
 // ─── Gallery Data ───
 const galleryEntries = [
+  { date: "10/9/26", restaurant: "Soo Ja Seolleongtang", image: "images/2026-10-09-soo-ja-seolleongtang.jpg", w: 1200, h: 902, caption: "" },
+  { date: "9/25/26", restaurant: "Mom's Tofu House", image: "images/2026-09-25-moms-tofu-house.jpg", w: 1024, h: 768, caption: "" },
   { date: "9/11/26", restaurant: "Panera Bread", image: "images/2026-09-11-panera-bread.jpg", w: 900, h: 1200, caption: "" },
   { date: "9/4/26", restaurant: "ABC Chicken", image: "images/2026-09-04-abc-chicken.jpg", w: 1024, h: 768, caption: "" },
   { date: "8/21/26", restaurant: "Fu Lam Moon Restaurant", image: "images/2026-08-21-fu-lam-moon.jpg", w: 1200, h: 251, caption: "" },
